@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-paper text-ink font-body;
+  }
+  ::selection {
+    @apply bg-gold/40;
+  }
+  :focus-visible {
+    outline: 2px solid theme('colors.stamp');
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .catalog-card {
+    @apply bg-card border border-line rounded-sm shadow-card;
+    background-image: theme('backgroundImage.grain');
+  }
+
+  .hairline {
+    @apply border-t border-line;
+  }
+
+  .ledger-label {
+    @apply font-mono text-[11px] uppercase tracking-[0.16em] text-ink/50;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
