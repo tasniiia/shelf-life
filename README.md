@@ -30,19 +30,90 @@ Two features:
    this cache for your whole to-read shelf in the background.
 2. **Shelf Awareness** — a recap of your reading habits, computed entirely
    from your CSV. Opens with a **hero stats row** (total books, pages read,
-   average rating, finish rate, top author) before diving into 14 detailed
-   insight cards: finish rate, publication-year spread, the single biggest
+   average rating, finish rate) before diving into 17 detailed insight
+   cards: finish rate, publication-year spread, the single biggest
    publication-year jump between two back-to-back reads, favorite author,
    format preference, early-adopter vs. archive-digger tendency, seasonal
    reading rhythm (with a "Winter Hibernator"/"Summer Sprinter" persona),
    your own rating distribution, whether long books actually earn higher
    ratings from you, page-count mix, series commitment, review-writing
-   habits, and your oldest unread book. Choose **All Time** or any year
-   you've actually finished a book in for an **Annual Recap** scoped to
-   just that year.
+   habits, your oldest unread book, **backlog clear time** (how long your
+   whole to-read shelf would take at your actual reading pace), a **TBR
+   declutter list** (the 3 books that have waited longest), and whether
+   your backlog is growing or shrinking over the past year. Choose **All
+   Time** or any year you've actually finished a book in for an **Annual
+   Recap** scoped to just that year.
    - On mobile, it plays as a full-screen, tap-through story.
    - On desktop, every card is laid out on one page — click any card to
      flip it over and reveal the detail on the back.
+   - **Share My Shelf Awareness Summary** composites your hero stats + the 3 most
+     notable insights (ranked by how far each number sits from a "boring
+     middle") into one single shareable image with a short description per
+     insight — a highlight reel, not the full 19-card deck. Free exports
+     carry a small watermark; a one-time unlock removes it (see
+     "Monetization setup" below — this needs a real Stripe account before
+     it's live).
+
+## Installing as an app (PWA)
+
+The deployed site is installable — "Add to Home Screen" on iOS/Android, or
+the install icon in Chrome's address bar on desktop. A minimal service
+worker caches the app shell as you use it for basic offline support, and
+deliberately never touches Open Library/Google Books requests (those stay
+live — caching a genre lookup would mean stale data forever, defeating the
+whole point of the separate, deliberate metadata cache in `bookMetadata.js`).
+The service worker only registers in the production build, not local dev,
+so it doesn't fight with Vite's own hot reload.
+
+## Real buy links (no scraping, no mock data)
+
+Each match in What's Next shows real purchase options:
+
+- **Google Books buy link + live price**, when Google actually has the
+  ebook for sale — this data is already being fetched alongside genre
+  matching, so it costs nothing extra. Deliberately **not** persisted in
+  the long-term metadata cache like genre data is, since a price can change
+  at any time and that cache has no expiry — persisting it would mean
+  showing a stale price forever once a book is cached.
+- **Amazon and Bookshop.org** links are always shown as a fallback — plain
+  product-search URLs, with an affiliate tag appended once you've
+  configured one (see below). Until then they're still fully functional
+  links, just without earning anything.
+
+## Monetization setup (affiliate links + Shelf Awareness summary watermark unlock)
+
+**Affiliate links:** open `src/lib/affiliateLinks.js` and fill in
+`AMAZON_ASSOCIATE_TAG` (from your Amazon Associates account) and/or
+`BOOKSHOP_AFFILIATE_ID` (from Bookshop.org). The commission disclaimer
+only appears in the UI once at least one is set — no need to touch
+anything else. Note: Bookshop.org's affiliate link format here is based on
+their publicly documented pattern but hasn't been tested against a live
+account from this environment — worth a direct check once you have a real
+affiliate ID.
+
+**Shelf Awareness summary watermark unlock** is scaffolded but **not live** — it
+needs a real Stripe account, which is a business step only you can
+complete:
+
+1. Create a Stripe account and a one-time-payment Price for the unlock.
+2. Rename `api/create-checkout-session.js.example` → `create-checkout-session.js`
+   and `api/stripe-webhook.js.example` → `stripe-webhook.js` (the webhook is
+   optional — see the comment at the top of that file for why).
+3. `npm install stripe`.
+4. In Vercel's project settings, add environment variables `STRIPE_SECRET_KEY`
+   (and `STRIPE_WEBHOOK_SECRET` if using the webhook). Never commit these to git.
+5. In `src/lib/monetization.js`, replace `STRIPE_PRICE_ID` with your real Price ID.
+
+Until all of that's done, the unlock button in the app will honestly say
+payments aren't connected yet, rather than pretending to work. In local dev
+(`npm run dev`), a "dev only" link on the unlock modal lets you flip the
+unlock flag directly to preview the unwatermarked experience without a real
+payment — it's hidden automatically in the deployed production build.
+
+Since there's no backend database, "unlocked" is stored as a flag in that
+browser's `localStorage` — a purchase unlocks the watermark removal on the
+device it was bought from, not an account that follows across devices
+(consistent with the rest of the app having no accounts at all).
 
 ## Deploying to Vercel
 

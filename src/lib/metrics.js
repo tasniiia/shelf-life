@@ -422,8 +422,53 @@ export function computeReadingVelocity(read) {
   return rates[Math.floor(rates.length / 2)]; // median, robust to outlier binges
 }
 
+// 14. Backlog Clear Time — at your current reading pace, how long would it
+// take to actually finish everything already on your to-read shelf?
+export function backlogClearTime(toRead, readingVelocity) {
+  const totalPages = toRead.reduce((sum, b) => sum + (b.pages || 0), 0);
+  if (!totalPages || !readingVelocity) return null;
+  const days = totalPages / readingVelocity;
+  return {
+    totalBooks: toRead.length,
+    totalPages,
+    days: Math.round(days),
+    years: Number((days / 365).toFixed(1)),
+  };
+}
+
+// 15. TBR Declutter List — the books that have been sitting the longest,
+// as a nudge to either finally read them or let them go.
+export function tbrDeclutterList(toRead, count = 3) {
+  const withDates = toRead.filter((b) => b.dateAdded);
+  if (!withDates.length) return null;
+  const now = new Date();
+  return [...withDates]
+    .sort((a, b) => a.dateAdded - b.dateAdded)
+    .slice(0, count)
+    .map((book) => {
+      const daysWaiting = daysBetween(book.dateAdded, now);
+      return { book, yearsWaiting: Number((daysWaiting / 365).toFixed(1)) };
+    });
+}
+
+// 16. Backlog Trend — is your to-read shelf growing faster than you're
+// clearing it, over the last 12 months?
+export function backlogTrend(read, toRead) {
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const addedLastYear = toRead.filter((b) => b.dateAdded && b.dateAdded >= oneYearAgo).length;
+  const readLastYear = read.filter((b) => b.dateRead && b.dateRead >= oneYearAgo).length;
+  if (!addedLastYear && !readLastYear) return null;
+  const net = addedLastYear - readLastYear;
+  let verdict = 'The Balanced Curator';
+  if (net > 5) verdict = 'The Collector';
+  else if (net < -5) verdict = 'The Depleter';
+  return { addedLastYear, readLastYear, net, verdict };
+}
+
 export function computeAllMetrics(library) {
   const { read, toRead, dnf, currentlyReading } = library;
+  const readingVelocity = computeReadingVelocity(read);
   return {
     commitment: commitmentRatio({ read, dnf, currentlyReading }),
     temporalWhiplash: temporalWhiplash(read),
@@ -441,5 +486,8 @@ export function computeAllMetrics(library) {
     seasonalVelocity: seasonalVelocity(read),
     biggestTimeJump: biggestTimeJump(read),
     totalPages: totalPagesRead(read),
+    backlogClear: backlogClearTime(toRead, readingVelocity),
+    tbrDeclutter: tbrDeclutterList(toRead, 3),
+    backlogTrend: backlogTrend(read, toRead),
   };
 }

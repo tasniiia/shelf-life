@@ -21,6 +21,12 @@ function serializeCache() {
   const obj = {};
   cache.forEach((value, key) => {
     if (!value) return; // never persist failures
+    // buyInfo (price/buy-link) is deliberately excluded here — unlike
+    // genre/cover data, a price can change at any time, and this cache has
+    // no per-field expiry. Persisting it would mean showing a stale price
+    // forever once a book's metadata is cached. It stays in-memory for the
+    // current session only; a fresh session re-fetches it along with
+    // everything else for any book not yet cached.
     obj[key] = {
       genres: [...value.genres],
       keywords: [...value.keywords],
@@ -44,6 +50,7 @@ function hydrateCacheFromStorage() {
         keywords: new Set(value.keywords),
         rating: value.rating,
         coverUrl: value.coverUrl ?? null,
+        buyInfo: null, // not persisted — see serializeCache comment
       });
       count += 1;
     });
@@ -356,7 +363,13 @@ async function runGoogleBooksQuery(q) {
     return null;
   }
   const data = await res.json();
-  return data.items?.[0]?.volumeInfo || null;
+  const item = data.items?.[0];
+  if (!item) return null;
+  // saleInfo is a sibling of volumeInfo in Google's response, not nested
+  // inside it — easy to lose track of if you're only reaching for
+  // volumeInfo, which is what this used to do before real buy-link/price
+  // data was added.
+  return { volumeInfo: item.volumeInfo || {}, saleInfo: item.saleInfo || {} };
 }
 
 async function fetchGoogleBooksByIsbn(isbn) {
@@ -365,29 +378,44 @@ async function fetchGoogleBooksByIsbn(isbn) {
 
 async function fetchGoogleBooksBySearch(title, author) {
   const cleanTitle = cleanTitleForSearch(title);
-  let info = await runGoogleBooksQuery(`intitle:${cleanTitle}${author ? `+inauthor:${author}` : ''}`).catch(
+  let result = await runGoogleBooksQuery(`intitle:${cleanTitle}${author ? `+inauthor:${author}` : ''}`).catch(
     () => null
   );
-  if (!info && author) {
-    info = await runGoogleBooksQuery(`intitle:${cleanTitle}`).catch(() => null);
+  if (!result && author) {
+    result = await runGoogleBooksQuery(`intitle:${cleanTitle}`).catch(() => null);
   }
-  return info;
+  return result;
 }
 
 async function fetchGoogleBooks(book) {
-  const info = book.isbn
+  const result = book.isbn
     ? await fetchGoogleBooksByIsbn(book.isbn).catch(() => null)
     : await fetchGoogleBooksBySearch(book.title, book.author).catch(() => null);
-  if (!info) return null;
+  if (!result) return null;
+  const { volumeInfo: info, saleInfo } = result;
   // Upgrade Google's occasionally-http thumbnail URLs to https to avoid
   // mixed-content blocking.
   const rawCover = info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || null;
+
+  // Real, live buy-link + price data — not mock, not scraped. Only present
+  // when Google actually has the ebook for sale with a valid link.
+  let buyInfo = null;
+  if (saleInfo?.saleability === 'FOR_SALE' && saleInfo.buyLink) {
+    const price = saleInfo.retailPrice || saleInfo.listPrice;
+    buyInfo = {
+      price: price?.amount ?? null,
+      currency: price?.currencyCode ?? null,
+      buyLink: saleInfo.buyLink,
+    };
+  }
+
   return {
     subjects: info.categories || [],
     description: info.description || '',
     rating: info.averageRating || null,
     ratingsCount: info.ratingsCount || 0,
     coverUrl: rawCover ? rawCover.replace(/^http:/, 'https:') : null,
+    buyInfo,
   };
 }
 
@@ -425,8 +453,9 @@ export async function getBookMetadata(book) {
   const keywords = extractKeywords(descriptionText);
   const rating = googleBooks?.rating ?? openLib?.rating ?? null;
   const coverUrl = googleBooks?.coverUrl ?? null;
+  const buyInfo = googleBooks?.buyInfo ?? null;
 
-  const result = { genres, keywords, rating, coverUrl };
+  const result = { genres, keywords, rating, coverUrl, buyInfo };
   cache.set(cacheKey, result);
   schedulePersist();
   return result;

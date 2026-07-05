@@ -5,12 +5,17 @@ import WhatsNext from './components/WhatsNext/WhatsNext';
 import ShelfAwareness from './components/ShelfAwareness/ShelfAwareness';
 import { prefetchLibraryMetadata, clearMetadataCache } from './lib/bookMetadata';
 import { filterSensibleCandidates } from './lib/metadataMatcher';
+import { checkForCheckoutReturn } from './lib/monetization';
 
 export default function App() {
   const [library, setLibrary] = useState(null);
   const [view, setView] = useState('vibe');
   const [prefetchProgress, setPrefetchProgress] = useState(null); // { done, total } | null
   const prefetchStarted = useRef(false);
+
+  useEffect(() => {
+    checkForCheckoutReturn();
+  }, []);
 
   useEffect(() => {
     if (!library || prefetchStarted.current) return;

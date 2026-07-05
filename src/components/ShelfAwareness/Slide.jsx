@@ -137,6 +137,24 @@ const Slide = forwardRef(function Slide({ slide, index, total }, ref) {
             <p className="text-ink/70 leading-relaxed">{slide.body}</p>
           </>
         )}
+
+        {slide.kind === 'bookList' && (
+          <>
+            <h2 className="font-display text-2xl font-semibold mb-5">{slide.headline}</h2>
+            <div className="space-y-3 mb-6">
+              {slide.bookList.map((b, i) => (
+                <div key={i} className="border border-line rounded-sm p-3 bg-card flex items-baseline justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-display text-base font-semibold leading-snug truncate">{b.title}</p>
+                    <p className="text-xs text-ink/50 truncate">{b.author}</p>
+                  </div>
+                  <span className="font-mono text-xs text-stamp shrink-0">{b.sublabel}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-ink/70 leading-relaxed">{slide.body}</p>
+          </>
+        )}
       </div>
 
       <div className="hairline pt-3 flex items-center justify-between">

@@ -46,7 +46,10 @@ export default function FlipCard({ slide, index }) {
                 {slide.timeline.fromYear} {'\u2192'} {slide.timeline.toYear}
               </p>
             ) : slide.stat ? (
-              <p className="font-mono text-3xl font-medium text-stamp leading-none mb-2">{slide.stat}</p>
+              <>
+                <p className="font-mono text-3xl font-medium text-stamp leading-none mb-1">{slide.stat}</p>
+                {slide.statLabel && <p className="ledger-label mb-2">{slide.statLabel}</p>}
+              </>
             ) : null}
             <h3 className="font-display text-lg font-semibold leading-snug">{slide.headline}</h3>
             {slide.author && <p className="text-xs text-ink/50 mt-1">{slide.author}</p>}
@@ -105,6 +108,16 @@ export default function FlipCard({ slide, index }) {
                   <p className="font-mono text-[10px] text-ink/40">{slide.timeline.toYear}</p>
                   <p className="font-display text-sm font-semibold leading-snug truncate">{slide.timeline.toTitle}</p>
                 </div>
+              </div>
+            )}
+            {slide.kind === 'bookList' && (
+              <div className="space-y-1.5 mb-3">
+                {slide.bookList.map((b, i) => (
+                  <div key={i} className="border border-line rounded-sm p-2 bg-paper flex items-baseline justify-between gap-2">
+                    <p className="font-display text-sm font-semibold leading-snug truncate">{b.title}</p>
+                    <span className="font-mono text-[10px] text-stamp shrink-0">{b.sublabel}</span>
+                  </div>
+                ))}
               </div>
             )}
             <p className="text-sm text-ink/80 leading-relaxed">{slide.body}</p>

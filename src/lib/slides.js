@@ -19,9 +19,6 @@ export function buildHeroStats(metrics, library) {
   if (metrics.commitment?.finishRate != null) {
     stats.push({ label: 'Finish Rate', value: `${Math.round(metrics.commitment.finishRate * 100)}%` });
   }
-  if (metrics.devotedFan) {
-    stats.push({ label: 'Top Author', value: metrics.devotedFan.author });
-  }
   return stats;
 }
 
@@ -303,6 +300,55 @@ export function buildSlides({ metrics, library, year = 'all' }) {
     });
   }
 
+  if (metrics.backlogClear) {
+    const { totalBooks, years, days } = metrics.backlogClear;
+    slides.push({
+      id: 'backlogClear',
+      kind: 'stat',
+      eyebrow: 'Backlog clear time',
+      headline: `${totalBooks} books waiting`,
+      stat: years >= 1 ? `${years}y` : `${days}d`,
+      statLabel: 'at your current pace',
+      body:
+        years >= 3
+          ? `At your reading speed, clearing your whole to-read shelf would take about ${years} years — assuming you never add another book, which, let's be honest.`
+          : `At your reading speed, you could clear your entire to-read shelf in about ${years < 1 ? `${days} days` : `${years} years`}. Not bad.`,
+    });
+  }
+
+  if (metrics.tbrDeclutter?.length) {
+    slides.push({
+      id: 'tbrDeclutter',
+      kind: 'bookList',
+      eyebrow: 'TBR declutter list',
+      headline: 'Time to decide',
+      bookList: metrics.tbrDeclutter.map((d) => ({
+        title: d.book.title,
+        author: d.book.author,
+        sublabel: `waiting ${d.yearsWaiting} year${d.yearsWaiting === 1 ? '' : 's'}`,
+      })),
+      body: "These have been sitting the longest. Finally read them, or let them go — either beats letting them haunt the list.",
+    });
+  }
+
+  if (metrics.backlogTrend) {
+    const { addedLastYear, readLastYear, net, verdict } = metrics.backlogTrend;
+    slides.push({
+      id: 'backlogTrend',
+      kind: 'stat',
+      eyebrow: 'Backlog trend',
+      headline: verdict,
+      stat: net > 0 ? `+${net}` : String(net),
+      statLabel: `net books added \u2014 ${addedLastYear} added, ${readLastYear} read`,
+      body:
+        verdict === 'The Collector'
+          ? "You're adding books faster than you're reading them — a healthy backlog, or a losing battle, depending on your outlook."
+          : verdict === 'The Depleter'
+          ? "You're clearing books faster than you're adding them — your to-read shelf is actually shrinking."
+          : 'Your to-read shelf is holding roughly steady — what comes in is about what goes out.',
+    });
+  }
+
   slides.push({
     id: 'outro',
     kind: 'intro',
@@ -311,5 +357,49 @@ export function buildSlides({ metrics, library, year = 'all' }) {
     body: 'Screenshot your favorite slide and pass it on.',
   });
 
+  // Notability score per card (0-1) — how far its number sits from a
+  // "boring middle." This is NOT used to hide cards in the main story/grid
+  // (every card always shows there) — it's purely so the shareable Shelf Awareness summary
+  // card (see pickTopInsights below) can pick the 3-4 most surprising
+  // facts to feature, without recomputing everything from scratch.
+  const clamp01 = (v) => Math.max(0, Math.min(1, v));
+  const NOTABILITY_SCORERS = {
+    commitment: () =>
+      metrics.commitment?.finishRate != null ? clamp01(Math.abs(metrics.commitment.finishRate - 0.5) * 2) : 0.3,
+    whiplash: () => (metrics.temporalWhiplash ? clamp01(metrics.temporalWhiplash.spread / 100) : 0),
+    timeJump: () => (metrics.biggestTimeJump ? clamp01(0.5 + metrics.biggestTimeJump.gap / 100) : 0),
+    seriesCommitment: () => (metrics.seriesCommitment ? clamp01(Math.abs(metrics.seriesCommitment.pct - 50) / 50) : 0),
+    devotedFan: () => (metrics.devotedFan ? clamp01(metrics.devotedFan.count / 8) : 0),
+    formatLoyalist: () =>
+      metrics.formatLoyalist ? clamp01(Math.abs(metrics.formatLoyalist.entries[0].pct - 40) / 60) : 0,
+    earlyAdopter: () => (metrics.earlyAdopter ? clamp01(Math.abs(metrics.earlyAdopter.avgGap - 4) / 16) : 0),
+    pace: () => (metrics.pace ? clamp01((metrics.pace.variationCoefficient ?? 0.5) / 1.5) : 0),
+    seasonalVelocity: () => (metrics.seasonalVelocity ? 0.5 : 0),
+    gradeCurve: () => (metrics.gradeCurve ? clamp01(Math.abs(metrics.gradeCurve.pctFiveStar - 25) / 60) : 0),
+    pageRatingRoi: () => (metrics.pageRatingRoi ? 0.55 : 0),
+    diet: () =>
+      metrics.diet
+        ? clamp01((Math.max(metrics.diet.pct.snacks, metrics.diet.pct.meals, metrics.diet.pct.foodComas) - 40) / 55)
+        : 0,
+    documentarian: () => (metrics.documentarian ? clamp01(Math.abs(metrics.documentarian.pct - 30) / 70) : 0),
+    graveyard: () => (metrics.graveyard ? clamp01(0.5 + metrics.graveyard.yearsWaiting / 10) : 0),
+    backlogClear: () => (metrics.backlogClear ? clamp01(metrics.backlogClear.years / 10) : 0),
+    tbrDeclutter: () => (metrics.tbrDeclutter?.length ? 0.5 : 0),
+    backlogTrend: () => (metrics.backlogTrend ? clamp01(Math.abs(metrics.backlogTrend.net) / 30) : 0),
+  };
+  slides.forEach((s) => {
+    if (s.id === 'intro' || s.id === 'outro') return;
+    s.notability = NOTABILITY_SCORERS[s.id]?.() ?? 0;
+  });
+
   return slides;
+}
+
+/**
+ * Picks the `count` most notable content cards (excludes intro/outro) for
+ * the shareable Shelf Awareness summary card — the highlight reel, not the full deck.
+ */
+export function pickTopInsights(slides, count = 4) {
+  const content = slides.filter((s) => s.id !== 'intro' && s.id !== 'outro');
+  return [...content].sort((a, b) => (b.notability ?? 0) - (a.notability ?? 0)).slice(0, count);
 }

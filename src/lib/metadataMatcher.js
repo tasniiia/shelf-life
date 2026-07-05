@@ -360,6 +360,7 @@ function rankAndBuildMatches(finishedBook, finishedMeta, candidates, candidateMe
     isbn: candidate.isbn,
     pages: candidate.pages || null,
     coverUrl: candidateMeta?.coverUrl || null,
+    buyInfo: candidateMeta?.buyInfo || null,
     estimatedDays:
       readingVelocity && candidate.pages ? Math.max(1, Math.round(candidate.pages / readingVelocity)) : null,
     why: buildWhy(finishedBook, finishedMeta, candidate, candidateMeta, direction, rank, genreWeights),

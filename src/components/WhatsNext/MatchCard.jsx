@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { ExternalLink, BookOpen, Clock } from 'lucide-react';
+import { ExternalLink, BookOpen, Clock, ShoppingCart } from 'lucide-react';
 import Card from '../ui/Card';
 import { coverUrlForBook } from '../../lib/bookMetadata';
+import { amazonSearchUrl, bookshopUrl, isAffiliateConfigured } from '../../lib/affiliateLinks';
 
 export default function MatchCard({ match, rank }) {
   // Try Open Library's ISBN-guess cover first, then fall back to Google
@@ -66,6 +67,45 @@ export default function MatchCard({ match, rank }) {
         </div>
       </div>
       <p className="hairline pt-3 text-sm text-ink/80 leading-relaxed">{match.why}</p>
+
+      <div className="hairline pt-3 flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          {match.buyInfo && (
+            <a
+              href={match.buyInfo.buyLink}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 text-xs font-medium bg-ink text-paper rounded-full px-3 py-1.5 hover:bg-stamp transition-colors"
+            >
+              <ShoppingCart className="w-3 h-3" />
+              {match.buyInfo.price != null
+                ? `${match.buyInfo.currency === 'USD' ? '$' : ''}${match.buyInfo.price} on Google Play`
+                : 'Buy on Google Play'}
+            </a>
+          )}
+          <a
+            href={amazonSearchUrl(match)}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-ink/50 hover:text-ink underline underline-offset-2"
+          >
+            Amazon
+          </a>
+          <a
+            href={bookshopUrl(match)}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-ink/50 hover:text-ink underline underline-offset-2"
+          >
+            Bookshop.org
+          </a>
+        </div>
+      </div>
+      {isAffiliateConfigured() && (
+        <p className="text-[10px] text-ink/35 mt-2 leading-relaxed">
+          Purchases made via these links may earn ShelfLife a commission at zero extra cost to you.
+        </p>
+      )}
     </Card>
   );
 }

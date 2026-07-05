@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { toPng } from 'html-to-image';
-import { Sparkles, Download, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, Download, X, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
 import Button from '../ui/Button';
 import Slide from './Slide';
 import ShelfAwarenessGrid from './ShelfAwarenessGrid';
+import RecapModal from './RecapModal';
 import { computeAllMetrics, getAvailableYears, filterLibraryByYear } from '../../lib/metrics';
-import { buildSlides } from '../../lib/slides';
+import { buildSlides, buildHeroStats, pickTopInsights } from '../../lib/slides';
 
 export default function ShelfAwareness({ library }) {
   const availableYears = useMemo(() => getAvailableYears(library), [library]);
@@ -19,9 +20,12 @@ export default function ShelfAwareness({ library }) {
     scopedLibrary,
     scope,
   ]);
+  const heroStats = useMemo(() => buildHeroStats(metrics, scopedLibrary), [metrics, scopedLibrary]);
+  const topInsights = useMemo(() => pickTopInsights(slides, 3), [slides]);
 
   const [error, setError] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [recapOpen, setRecapOpen] = useState(false);
   const [current, setCurrent] = useState(0);
   const slideRef = useRef(null);
 
@@ -105,13 +109,27 @@ export default function ShelfAwareness({ library }) {
           </div>
         )}
 
-        <Button onClick={handleGenerate} size="lg">
-          <Sparkles className="w-4 h-4" /> Generate My Shelf Awareness
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button onClick={handleGenerate} size="lg">
+            <Sparkles className="w-4 h-4" /> Generate My Shelf Awareness
+          </Button>
+          <Button onClick={() => setRecapOpen(true)} size="lg" variant="secondary">
+            <Share2 className="w-4 h-4" /> Share My Shelf Awareness Summary
+          </Button>
+        </div>
         {error && (
           <p className="mt-4 text-sm text-stamp" role="alert">
             {error}
           </p>
+        )}
+
+        {recapOpen && (
+          <RecapModal
+            heroStats={heroStats}
+            topInsights={topInsights}
+            scopeLabel={scope === 'all' ? 'All Time' : `${scope} Recap`}
+            onClose={() => setRecapOpen(false)}
+          />
         )}
       </div>
     );
