@@ -10,6 +10,15 @@ import UnlockModal from './UnlockModal';
 import { computeAllMetrics, getAvailableYears, filterLibraryByYear } from '../../lib/metrics';
 import { buildSlides, buildHeroStats, pickTopInsights } from '../../lib/slides';
 import { isProUnlocked } from '../../lib/monetization';
+import { getAllVocabEntries } from '../../lib/vocabularyDb';
+import { getBookMetadata } from '../../lib/bookMetadata';
+import {
+  computeScrabblePower,
+  computeLinguisticEra,
+  uniqueSourceBooksForGenre,
+  computeGenreDialect,
+  buildVocabInsightSlides,
+} from '../../lib/vocabularyInsights';
 
 export default function ShelfAwareness({ library }) {
   const availableYears = useMemo(() => getAvailableYears(library), [library]);
@@ -18,11 +27,67 @@ export default function ShelfAwareness({ library }) {
 
   const scopedLibrary = useMemo(() => filterLibraryByYear(library, scope), [library, scope]);
   const metrics = useMemo(() => computeAllMetrics(scopedLibrary), [scopedLibrary]);
-  const slides = useMemo(() => buildSlides({ metrics, library: scopedLibrary, year: scope }), [
+  const coreSlides = useMemo(() => buildSlides({ metrics, library: scopedLibrary, year: scope }), [
     metrics,
     scopedLibrary,
     scope,
   ]);
+
+  // Vocabulary Vault lives in IndexedDB, which is async, unlike the rest
+  // of this deck (built synchronously from the CSV-derived library) — so
+  // these 3 cards necessarily arrive an instant after the rest of the deck
+  // renders, once this resolves, rather than being part of the same
+  // synchronous buildSlides() pass.
+  const [vocabSlides, setVocabSlides] = useState([]);
+  useEffect(() => {
+    let cancelled = false;
+    const scopeLabel = scope === 'all' ? 'All Time' : String(scope);
+
+    getAllVocabEntries()
+      .then(async (entries) => {
+        if (cancelled || !entries.length) return;
+
+        const scrabblePower = computeScrabblePower(entries, scope);
+        const linguisticEra = computeLinguisticEra(entries, library, scope);
+
+        // Genre Dialect needs a small targeted fetch — only for the
+        // specific books vocab words are actually linked to, not the
+        // whole read shelf (see the chat note on why that distinction
+        // matters). Reuses the same cache as every other genre lookup in
+        // the app, so repeat visits cost nothing.
+        const booksNeedingGenre = uniqueSourceBooksForGenre(entries, library, scope);
+        const genreByBook = new Map();
+        await Promise.all(
+          booksNeedingGenre.map(async (book) => {
+            try {
+              const meta = await getBookMetadata(book);
+              if (meta?.genres?.size) genreByBook.set(`${book.title}::${book.author}`, meta.genres);
+            } catch (err) {
+              console.warn(`[ShelfLife] Genre lookup failed for "${book.title}":`, err.message || err);
+            }
+          })
+        );
+        if (cancelled) return;
+        const genreDialect = computeGenreDialect(entries, library, scope, genreByBook);
+
+        setVocabSlides(buildVocabInsightSlides({ scrabblePower, linguisticEra, genreDialect, scopeLabel }));
+      })
+      .catch((err) => {
+        console.warn('[ShelfLife] Could not load vocabulary insights:', err.message || err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [library, scope]);
+
+  // Vocab-derived cards slot in just before the closing "outro" card, which
+  // buildSlides always places last.
+  const slides = useMemo(() => {
+    if (!vocabSlides.length) return coreSlides;
+    return [...coreSlides.slice(0, -1), ...vocabSlides, coreSlides[coreSlides.length - 1]];
+  }, [coreSlides, vocabSlides]);
+
   const heroStats = useMemo(() => buildHeroStats(metrics, scopedLibrary), [metrics, scopedLibrary]);
   // Locked-and-not-yet-purchased cards must never surface in the free
   // shareable summary — otherwise generating that image would be a trivial

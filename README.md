@@ -78,6 +78,20 @@ Three features:
      a flip to discover they're locked — see the honesty note in
      "Monetization setup" below about exactly what that protects against
      (and doesn't).
+   - **3 more Pro cards, derived from Vocabulary Vault**, appended just
+     before the closing card once that data loads (it lives in IndexedDB,
+     async, unlike the rest of this synchronously-built deck, so these
+     arrive an instant after everything else — imperceptible in practice):
+     **Scrabble Power** (a deliberately gamified point score across your
+     logged words, using standard Scrabble tile values), **Your Linguistic
+     Era** (a Spotify-Wrapped-style persona based on the publication era of
+     the books your words came from — cross-referenced against your
+     current library at display time, not stored on the word itself, so it
+     works retroactively for every existing entry), and **Where Your Words
+     Come From** (which genre category has taught you the most new words —
+     fetches genre data only for the specific handful of books your
+     vocabulary is actually linked to, not your whole read shelf, to keep
+     it cheap).
 
 3. **Vocabulary Vault** — log a word you ran into while reading, and it
    looks up the definition, part of speech, and phonetic spelling for you
