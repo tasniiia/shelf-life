@@ -73,7 +73,8 @@ export default function FlipCard({ slide, index, isProUnlocked, onRequestUnlock 
             ) : slide.kind === 'book' ? (
               <div className="flex flex-col items-center text-center py-4">
                 <BookOpen className="w-8 h-8 text-ink/20 mb-3" />
-                <p className="text-sm text-ink/50">One book has been waiting longer than any other.</p>
+                <h3 className="font-display text-lg font-semibold leading-snug">The Longest Wait</h3>
+                <p className="text-xs text-ink/50 mt-1">Flip to find out which book.</p>
               </div>
             ) : null}
             {slide.kind !== 'book' && (

@@ -81,21 +81,25 @@ export function computeLocalGoalProgress(goal, library, vocabEntries) {
   const { start, end } = getPeriodBounds(goal.period);
 
   if (goal.type === 'books') {
-    const current = library.read.filter((b) => inRange(b.dateRead, start, end)).length;
-    return { current, target: goal.target };
+    const periodBooks = library.read.filter((b) => inRange(b.dateRead, start, end));
+    return { current: periodBooks.length, target: goal.target, items: periodBooks.map((b) => b.title) };
   }
 
   if (goal.type === 'pages') {
-    const current = library.read
-      .filter((b) => inRange(b.dateRead, start, end))
-      .reduce((sum, b) => sum + (b.pages || 0), 0);
-    return { current, target: goal.target };
+    const periodBooks = library.read.filter((b) => inRange(b.dateRead, start, end));
+    const current = periodBooks.reduce((sum, b) => sum + (b.pages || 0), 0);
+    return {
+      current,
+      target: goal.target,
+      items: periodBooks.filter((b) => b.pages).map((b) => `${b.title} (${b.pages}pg)`),
+    };
   }
 
   if (goal.type === 'vocab') {
-    const current = vocabEntries.filter((e) => inRange(e.dateLearned ? new Date(e.dateLearned) : null, start, end))
-      .length;
-    return { current, target: goal.target };
+    const periodEntries = vocabEntries.filter((e) =>
+      inRange(e.dateLearned ? new Date(e.dateLearned) : null, start, end)
+    );
+    return { current: periodEntries.length, target: goal.target, items: periodEntries.map((e) => e.word) };
   }
 
   if (goal.type === 'authors') {
@@ -103,8 +107,8 @@ export function computeLocalGoalProgress(goal, library, vocabEntries) {
     const priorAuthors = new Set(
       library.read.filter((b) => b.dateRead && (!start || b.dateRead < start)).map((b) => b.author)
     );
-    const newAuthors = new Set(periodBooks.filter((b) => !priorAuthors.has(b.author)).map((b) => b.author));
-    return { current: newAuthors.size, target: goal.target };
+    const newAuthors = [...new Set(periodBooks.filter((b) => !priorAuthors.has(b.author)).map((b) => b.author))];
+    return { current: newAuthors.length, target: goal.target, items: newAuthors };
   }
 
   return null; // 'genres' needs async data — see computeGenreGoalProgress
@@ -132,7 +136,7 @@ export function computeGenreGoalProgress(goal, library, genreByBook) {
     if (topGenre) genres.add(topGenre);
   });
 
-  return { current: genres.size, target: goal.target };
+  return { current: genres.size, target: goal.target, items: [...genres] };
 }
 
 /**

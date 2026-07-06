@@ -17,7 +17,17 @@ Three features:
    not "time remaining," since Goodreads doesn't track how far into a book
    you actually are. On mobile, when there's more than one book, each card
    is slightly narrower than the full screen so the next one visibly peeks
-   in from the edge as a scroll hint.). Below that: pick the
+   in from the edge as a scroll hint.
+   - **Manual progress tracking** closes that "time remaining" gap
+     directly: a slider (backed by a page-number readout, since that's
+     what people actually know, rather than an abstract percentage) lets
+     you note how far into a book you are. Once set, the estimate upgrades
+     from "~3-day read at your pace" to genuine "~1 day left." Stored in
+     its own small IndexedDB store, separate from the library itself, so
+     it survives re-uploading a fresh CSV mid-book the same way
+     Vocabulary Vault and Goals do.
+
+   Below that: pick the
    book you just finished, and get 3 ranked
    matches from your own "To Read" shelf, complete with cover art. Three
    fallback tiers: Open Library's ISBN-guess cover first, then Google
@@ -54,7 +64,10 @@ Three features:
      it currently is, the way a fitness app's weekly step goal resets each
      week. Hitting a goal earns a 🔥 streak that carries forward each time
      the period rolls over, checked automatically whenever you open the
-     app.
+     app. Each goal is collapsible — clicking the progress count (e.g.
+     "16 / 5") expands a list of exactly which items counted toward it:
+     which specific authors, book titles, words, or genres, not just the
+     number.
      - Books, pages, vocabulary words, and new authors are instant — pure
        local math against data already loaded. "New authors" specifically
        means authors you hadn't read *before* the current period started,

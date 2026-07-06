@@ -1,7 +1,9 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import CurrentlyReadingCard from './CurrentlyReadingCard';
 import { sortByDateAddedDescending } from '../../lib/currentlyReading';
 import { computeReadingVelocity } from '../../lib/metrics';
+import { bookProgressKey } from '../../lib/readingProgress';
+import { getAllProgress, setProgress } from '../../lib/progressDb';
 
 export default function CurrentlyReadingHero({ library }) {
   const books = useMemo(
@@ -9,6 +11,36 @@ export default function CurrentlyReadingHero({ library }) {
     [library.currentlyReading]
   );
   const readingVelocity = useMemo(() => computeReadingVelocity(library.read), [library.read]);
+
+  // Loaded once for the whole widget rather than per-card, so a handful
+  // of currently-reading books don't each independently hit IndexedDB.
+  const [progressByKey, setProgressByKey] = useState({});
+  useEffect(() => {
+    let cancelled = false;
+    getAllProgress()
+      .then((entries) => {
+        if (cancelled) return;
+        const map = {};
+        entries.forEach((e) => {
+          map[e.bookKey] = e.pct;
+        });
+        setProgressByKey(map);
+      })
+      .catch((err) => {
+        console.warn('[ShelfLife] Could not load reading progress:', err.message || err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function handleProgressChange(book, pct) {
+    const bookKey = bookProgressKey(book);
+    setProgressByKey((prev) => ({ ...prev, [bookKey]: pct }));
+    setProgress({ bookKey, pct, updatedAt: new Date().toISOString() }).catch((err) => {
+      console.warn('[ShelfLife] Could not save reading progress:', err.message || err);
+    });
+  }
 
   if (books.length === 0) return null;
 
@@ -21,14 +53,19 @@ export default function CurrentlyReadingHero({ library }) {
         Pick up where you left off.
       </h2>
       <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {books.map((book) => (
-          <CurrentlyReadingCard
-            key={book.isbn || book.title}
-            book={book}
-            readingVelocity={readingVelocity}
-            peek={hasMultiple}
-          />
-        ))}
+        {books.map((book) => {
+          const bookKey = bookProgressKey(book);
+          return (
+            <CurrentlyReadingCard
+              key={bookKey}
+              book={book}
+              readingVelocity={readingVelocity}
+              peek={hasMultiple}
+              progress={progressByKey[bookKey]}
+              onProgressChange={(pct) => handleProgressChange(book, pct)}
+            />
+          );
+        })}
       </div>
     </div>
   );

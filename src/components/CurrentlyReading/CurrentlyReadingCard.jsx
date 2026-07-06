@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BookOpen, ExternalLink, Clock } from 'lucide-react';
 import { coverUrlForBook, getBookMetadata } from '../../lib/bookMetadata';
 import { daysOnShelfLabel } from '../../lib/currentlyReading';
 import { goodreadsUrl } from '../../lib/metadataMatcher';
+import { percentToPage, estimateDaysRemaining } from '../../lib/readingProgress';
 
-export default function CurrentlyReadingCard({ book, readingVelocity, peek }) {
+export default function CurrentlyReadingCard({ book, readingVelocity, peek, progress, onProgressChange }) {
   // Not every Goodreads entry has an ISBN — Kindle editions especially
   // often don't — so this needs the same graceful placeholder fallback
   // used everywhere else covers are shown in this app, not an assumption
@@ -33,12 +34,32 @@ export default function CurrentlyReadingCard({ book, readingVelocity, peek }) {
 
   const coverUrl = coverFailed || !isbnCoverUrl ? fallbackCover : isbnCoverUrl;
   const shelfLabel = daysOnShelfLabel(book.dateAdded);
-  // Same "at your pace" math as What's Next — an estimate for reading the
-  // whole book, not "time remaining." Goodreads doesn't track how far into
-  // a book you actually are, so a remaining-time claim isn't something the
-  // data can honestly support; this is the same honest framing used there.
-  const estimatedDays =
+
+  // Live slider value, separate from the persisted `progress` prop, so
+  // dragging feels instant rather than waiting on a round-trip to
+  // IndexedDB on every tick. Falls back to 0 if nothing's been entered
+  // yet — the slider itself always needs *some* numeric position, even
+  // though the time estimate below treats "never set" differently from
+  // "explicitly set to 0%" (see the null-check in estimateDaysRemaining).
+  const [sliderValue, setSliderValue] = useState(progress ?? 0);
+  useEffect(() => setSliderValue(progress ?? 0), [progress]);
+
+  const saveTimeout = useRef(null);
+  function handleSliderChange(pct) {
+    setSliderValue(pct);
+    clearTimeout(saveTimeout.current);
+    // Debounced rather than saving on every drag tick — keyboard arrow
+    // presses and pointer drags can both fire many onChange events per
+    // second, and there's no need to hit IndexedDB that often for a value
+    // that's just going to keep changing for the next moment anyway.
+    saveTimeout.current = setTimeout(() => onProgressChange(pct), 400);
+  }
+
+  const hasProgress = progress != null;
+  const remainingDays = hasProgress ? estimateDaysRemaining(book, progress, readingVelocity) : null;
+  const wholeBookDays =
     readingVelocity && book.pages ? Math.max(1, Math.ceil(book.pages / readingVelocity)) : null;
+  const pageEquivalent = book.pages ? percentToPage(sliderValue, book.pages) : null;
 
   return (
     <div
@@ -61,11 +82,36 @@ export default function CurrentlyReadingCard({ book, readingVelocity, peek }) {
         <h3 className="font-display text-lg font-semibold leading-snug mb-1">{book.title}</h3>
         <p className="text-sm text-ink/60 truncate mb-2">{book.author}</p>
         {shelfLabel && <p className="text-xs text-ink/45 mb-2">{shelfLabel}</p>}
-        {estimatedDays && (
+
+        <div className="mb-2">
+          <div className="flex items-center justify-between text-xs text-ink/50 mb-1">
+            <span>
+              {sliderValue}% done{pageEquivalent ? ` \u00b7 page ${pageEquivalent} of ${book.pages}` : ''}
+            </span>
+          </div>
+          <div className="h-2 bg-line rounded-full overflow-hidden mb-1.5">
+            <div className="h-full bg-stamp rounded-full transition-all" style={{ width: `${sliderValue}%` }} />
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={sliderValue}
+            onChange={(e) => handleSliderChange(Number(e.target.value))}
+            className="w-full accent-stamp"
+            aria-label={`Reading progress for ${book.title}`}
+          />
+        </div>
+
+        {(remainingDays != null || wholeBookDays) && (
           <p className="flex items-center gap-1 text-xs text-ink/45 mb-2">
-            <Clock className="w-3 h-3" /> ~{estimatedDays}-day read at your pace
+            <Clock className="w-3 h-3" />
+            {remainingDays != null
+              ? `~${remainingDays === 0 ? 'less than a' : remainingDays}-day${remainingDays === 1 ? '' : 's'} left at your pace`
+              : `~${wholeBookDays}-day read at your pace`}
           </p>
         )}
+
         <a
           href={goodreadsUrl(book)}
           target="_blank"

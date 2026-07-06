@@ -1,12 +1,16 @@
-import { Flame, CheckCircle2, Trash2, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Flame, CheckCircle2, Trash2, Loader2, ChevronDown } from 'lucide-react';
 import { goalTypeLabel, periodLabel } from '../../lib/goals';
 
 export default function GoalCard({ goal, progress, onDelete }) {
+  const [expanded, setExpanded] = useState(false);
   const isLoading = progress === undefined; // genre goals resolve async, everything else is instant
   const current = progress?.current ?? 0;
   const target = goal.target;
   const isComplete = progress != null && current >= target;
   const pct = progress != null ? Math.min(100, Math.round((current / target) * 100)) : 0;
+  const items = progress?.items;
+  const hasItems = items && items.length > 0;
 
   // Auto-generated from the actual tracked fields rather than a free-text
   // label someone could type in — a custom label like "read more fantasy"
@@ -40,9 +44,16 @@ export default function GoalCard({ goal, progress, onDelete }) {
             />
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-ink/50">
+            <button
+              onClick={() => hasItems && setExpanded((e) => !e)}
+              disabled={!hasItems}
+              className={`flex items-center gap-1 text-ink/50 ${hasItems ? 'hover:text-ink' : ''}`}
+            >
               {current} / {target}
-            </span>
+              {hasItems && (
+                <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+              )}
+            </button>
             <div className="flex items-center gap-2">
               {goal.streak > 0 && (
                 <span className="flex items-center gap-1 text-ink/50">
@@ -56,6 +67,16 @@ export default function GoalCard({ goal, progress, onDelete }) {
               )}
             </div>
           </div>
+
+          {expanded && hasItems && (
+            <ul className="mt-3 pt-3 border-t border-line space-y-1 max-h-40 overflow-y-auto">
+              {items.map((item, i) => (
+                <li key={i} className="text-xs text-ink/70 truncate">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          )}
         </>
       )}
     </div>
