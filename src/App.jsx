@@ -3,6 +3,7 @@ import Header from './components/Layout/Header';
 import CsvUpload from './components/Upload/CsvUpload';
 import WhatsNext from './components/WhatsNext/WhatsNext';
 import ShelfAwareness from './components/ShelfAwareness/ShelfAwareness';
+import VocabularyVault from './components/VocabularyVault/VocabularyVault';
 import { prefetchLibraryMetadata, clearMetadataCache } from './lib/bookMetadata';
 import { filterSensibleCandidates } from './lib/metadataMatcher';
 import { checkForCheckoutReturn } from './lib/monetization';
@@ -65,6 +66,8 @@ export default function App() {
         {library && view === 'vibe' && <WhatsNext library={library} />}
 
         {library && view === 'awareness' && <ShelfAwareness library={library} />}
+
+        {library && view === 'vocab' && <VocabularyVault library={library} />}
       </main>
 
       {library && (

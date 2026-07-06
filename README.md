@@ -49,13 +49,38 @@ Two features:
    - **Share My Shelf Awareness Summary** composites your hero stats + the 3 most
      notable insights (ranked by how far each number sits from a "boring
      middle") into one single shareable image with a short description per
-     insight — a highlight reel, not the full 19-card deck.
-   - **3 bonus cards** (Seasonal Velocity, Page-to-Rating ROI, TBR Declutter
-     List) are locked behind **ShelfLife Pro**, a single $2.99 one-time
-     unlock that also removes the watermark from the shareable summary
-     above. Locked cards show a padlock and a blurred preview rather than
-     the real numbers — see the honesty note in "Monetization setup" below
-     about exactly what that protects against (and doesn't).
+     insight — a highlight reel, not the full 19-card deck. This summary
+     card is a **ShelfLife Pro** perk: free users see a blurred preview
+     with an unlock prompt and can't download it; Pro users see it clearly,
+     watermark-free, and can download it.
+   - **10 cards** (Weekend Warrior/Steady Reader pace persona, Seasonal
+     Velocity, The Fair Grader, Length vs. Rating, Literary Diet, The
+     Documentarian, To-Read Graveyard, Backlog Clear Time, TBR Declutter
+     List, Backlog Trend) are locked behind ShelfLife Pro, a single $2.99
+     one-time unlock — the first 8 cards plus the closing card stay free.
+     Locked cards show a blurred preview immediately rather than requiring
+     a flip to discover they're locked — see the honesty note in
+     "Monetization setup" below about exactly what that protects against
+     (and doesn't).
+
+3. **Vocabulary Vault** — log a word you ran into while reading, and it
+   looks up the definition, part of speech, and phonetic spelling for you
+   via the free Free Dictionary API — no key, no signup. Optionally tie the
+   word to a specific book from your library via a searchable
+   title/author autocomplete; if that book is on your **read** shelf, its
+   real Date Read carries over as the entry's timeline anchor instead of
+   today's date. A 404 (common for invented fantasy/sci-fi words) doesn't
+   block the save — the word is kept with blank definition fields you can
+   fill in yourself. Fully free, no Pro gate. Export your whole vault as
+   JSON or CSV at any time.
+   - Storage is IndexedDB, not `localStorage` — better suited to a
+     collection that can grow into hundreds of entries with real structure,
+     and it's asynchronous rather than blocking. Implemented as a small
+     hand-rolled wrapper (`src/lib/vocabularyDb.js`) rather than pulling in
+     the `idb` npm package, since this project's build environment has no
+     network access to actually verify a new dependency resolves — the
+     wrapper follows the standard IndexedDB request/transaction pattern
+     directly instead.
 
 ## Installing as an app (PWA)
 
@@ -168,8 +193,8 @@ Then open the printed local URL. On first load:
 1. **Upload your Goodreads CSV.** Goodreads → Account Settings →
    Import/Export → Export Library. The file is parsed entirely in your
    browser with PapaParse; nothing is uploaded anywhere.
-2. Use the **What's Next** or **Shelf Awareness** tab. That's it — no
-   accounts, no setup.
+2. Use the **What's Next**, **Shelf Awareness**, or **Vocabulary Vault**
+   tab. That's it — no accounts, no setup.
 
 ## Project structure
 
@@ -181,10 +206,13 @@ src/
     bookMetadata.js      # Open Library + Google Books lookups
     metadataMatcher.js   # Scoring/ranking logic for What's Next
     slides.js           # Turns metrics into the Shelf Awareness deck
+    vocabulary.js        # Dictionary lookup, book search, export logic
+    vocabularyDb.js       # Hand-rolled IndexedDB wrapper for saved words
   components/
     Layout/          # Header + nav
     Upload/          # CSV drop zone
-    VibeMatcher/     # Book picker + match result cards
+    WhatsNext/       # Book picker + match result cards
+    VocabularyVault/ # Quick-add form + dashboard grid
     ShelfAwareness/  # Mobile story player + desktop flip-card grid
     ui/              # Shared Button, Card, Stamp primitives
 ```
