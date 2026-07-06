@@ -11,7 +11,13 @@ Three features:
    for X days" rather than "started X days ago," since Goodreads' CSV has
    no field for when a book actually moved to currently-reading, only when
    it was first added to your account on any shelf; shares the same
-   three-tier cover fallback described below). Below that: pick the
+   three-tier cover fallback described below. Each card also shows a
+   Goodreads link and an "at your pace" estimated read time using the same
+   reading-velocity math as What's Next — an estimate for the whole book,
+   not "time remaining," since Goodreads doesn't track how far into a book
+   you actually are. On mobile, when there's more than one book, each card
+   is slightly narrower than the full screen so the next one visibly peeks
+   in from the edge as a scroll hint.). Below that: pick the
    book you just finished, and get 3 ranked
    matches from your own "To Read" shelf, complete with cover art. Three
    fallback tiers: Open Library's ISBN-guess cover first, then Google

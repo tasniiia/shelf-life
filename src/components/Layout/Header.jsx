@@ -44,7 +44,7 @@ export default function Header({ view, onChangeView, hasLibrary, onNewUpload }) 
             What's Next?
           </TabButton>
           <TabButton full active={view === 'awareness'} onClick={() => onChangeView('awareness')}>
-            Shelf Awareness
+            Awareness
           </TabButton>
           <TabButton full active={view === 'vocab'} onClick={() => onChangeView('vocab')}>
             Vocab
@@ -60,8 +60,8 @@ function TabButton({ active, onClick, children, full }) {
     <button
       onClick={onClick}
       className={clsx(
-        'text-sm font-medium px-4 py-2 transition-colors',
-        full ? 'flex-1 py-3' : 'rounded-full',
+        'font-medium transition-colors whitespace-nowrap',
+        full ? 'flex-1 py-3 px-1 text-xs' : 'text-sm px-4 py-2 rounded-full',
         active ? 'bg-ink text-paper' : 'text-ink/60 hover:text-ink'
       )}
     >
