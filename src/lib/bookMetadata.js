@@ -225,7 +225,7 @@ function cleanTitleForSearch(title) {
 async function runOpenLibraryQuery(q) {
   const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(
     q
-  )}&fields=title,author_name,subject,first_sentence,ratings_average&limit=1`;
+  )}&fields=title,author_name,subject,first_sentence,ratings_average,cover_i&limit=1`;
   try {
     const res = await fetchWithTimeout(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -253,10 +253,17 @@ async function fetchOpenLibraryBySearch(title, author) {
   }
   if (!doc) return null;
   const firstSentence = Array.isArray(doc.first_sentence) ? doc.first_sentence[0] : doc.first_sentence;
+  // cover_i is matched via title/author search, not ISBN — a genuinely
+  // separate source from the ISBN-guess cover UI components try first,
+  // useful specifically for books with a blank ISBN in the Goodreads
+  // export (common for Kindle editions) that Open Library still has
+  // cataloged under some edition.
+  const coverUrl = doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg` : null;
   return {
     subjects: (doc.subject || []).slice(0, 60),
     description: firstSentence || '',
     rating: doc.ratings_average || null,
+    coverUrl,
   };
 }
 
@@ -452,7 +459,11 @@ export async function getBookMetadata(book) {
   const descriptionText = [openLib?.description, googleBooks?.description].filter(Boolean).join(' ');
   const keywords = extractKeywords(descriptionText);
   const rating = googleBooks?.rating ?? openLib?.rating ?? null;
-  const coverUrl = googleBooks?.coverUrl ?? null;
+  // Google Books first (generally reliable when it has anything at all),
+  // then Open Library's title/author-matched cover as a second try —
+  // together these catch meaningfully more books than either alone,
+  // especially ones with a blank ISBN in the Goodreads export.
+  const coverUrl = googleBooks?.coverUrl ?? openLib?.coverUrl ?? null;
   const buyInfo = googleBooks?.buyInfo ?? null;
 
   const result = { genres, keywords, rating, coverUrl, buyInfo };

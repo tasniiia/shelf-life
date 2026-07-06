@@ -10,12 +10,16 @@ Three features:
    first, hidden entirely if that shelf is empty — labeled "On your shelf
    for X days" rather than "started X days ago," since Goodreads' CSV has
    no field for when a book actually moved to currently-reading, only when
-   it was first added to your account on any shelf). Below that: pick the
+   it was first added to your account on any shelf; shares the same
+   three-tier cover fallback described below). Below that: pick the
    book you just finished, and get 3 ranked
-   matches from your own "To Read" shelf, complete with cover art (Open
-   Library's ISBN-guess cover first, falling back to Google Books' thumbnail
-   — already fetched alongside genre data — if Open Library doesn't have
-   one). Looks up real subject tags, descriptions, and ratings from Open
+   matches from your own "To Read" shelf, complete with cover art. Three
+   fallback tiers: Open Library's ISBN-guess cover first, then Google
+   Books' thumbnail (already fetched alongside genre data), then Open
+   Library's own title/author-matched cover as a last resort — this third
+   one catches books with a blank ISBN in the Goodreads export (common for
+   Kindle editions) that Google Books also doesn't have. Looks up real
+   subject tags, descriptions, and ratings from Open
    Library and Google Books; results stream in and re-rank live as each
    book resolves, rather than showing a blank wait for the whole batch.
 
