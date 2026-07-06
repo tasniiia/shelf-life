@@ -9,7 +9,7 @@ import RecapModal from './RecapModal';
 import UnlockModal from './UnlockModal';
 import { computeAllMetrics, getAvailableYears, filterLibraryByYear } from '../../lib/metrics';
 import { buildSlides, buildHeroStats, pickTopInsights } from '../../lib/slides';
-import { isProUnlocked } from '../../lib/monetization';
+import { useProUnlocked } from '../../hooks/useProUnlocked';
 import { getAllVocabEntries } from '../../lib/vocabularyDb';
 import { getBookMetadata } from '../../lib/bookMetadata';
 import {
@@ -23,7 +23,7 @@ import {
 export default function ShelfAwareness({ library }) {
   const availableYears = useMemo(() => getAvailableYears(library), [library]);
   const [scope, setScope] = useState('all');
-  const [proUnlocked, setProUnlockedState] = useState(isProUnlocked());
+  const proUnlocked = useProUnlocked();
 
   const scopedLibrary = useMemo(() => filterLibraryByYear(library, scope), [library, scope]);
   const metrics = useMemo(() => computeAllMetrics(scopedLibrary), [scopedLibrary]);
@@ -215,10 +215,7 @@ export default function ShelfAwareness({ library }) {
         <UnlockModal
           open={unlockModalOpen}
           onClose={() => setUnlockModalOpen(false)}
-          onUnlocked={() => {
-            setProUnlockedState(true);
-            setUnlockModalOpen(false);
-          }}
+          onUnlocked={() => setUnlockModalOpen(false)}
         />
       </div>
     );
@@ -322,10 +319,7 @@ export default function ShelfAwareness({ library }) {
       <UnlockModal
         open={unlockModalOpen}
         onClose={() => setUnlockModalOpen(false)}
-        onUnlocked={() => {
-          setProUnlockedState(true);
-          setUnlockModalOpen(false);
-        }}
+        onUnlocked={() => setUnlockModalOpen(false)}
       />
     </>
   );

@@ -79,7 +79,8 @@ Three features:
 2. **Shelf Awareness** — a recap of your reading habits, computed entirely
    from your CSV. Opens with a **hero stats row** (total books, pages read,
    average rating, finish rate) before diving into 17 detailed insight
-   cards: finish rate, publication-year spread, the single biggest
+   cards: finish rate, your shortest vs. longest read as a pair ("The
+   Bookends"), the single biggest
    publication-year jump between two back-to-back reads, favorite author,
    format preference, early-adopter vs. archive-digger tendency, seasonal
    reading rhythm (with a "Winter Hibernator"/"Summer Sprinter" persona),
@@ -208,14 +209,23 @@ Until all of that's done, the unlock button in the app will honestly say
 payments aren't connected yet, rather than pretending to work.
 
 **Demoing Pro before Stripe is live:** open `src/lib/monetization.js` and
-change `PROMO_CODE` (default `shelflife-preview`) to whatever phrase you
-want. Two ways to redeem it:
+change `PROMO_CODE` (default `SHELF`, 5 letters, easy to type or say out
+loud during a demo) to whatever phrase you want. Two ways to redeem it:
 - **A shareable link** — `yoursite.com?promo=your-code` unlocks Pro
   automatically on load, no typing required. Good for sending to early
   testers.
 - **Manual entry** — click "Have a promo code?" on the unlock modal (the
   same one both the locked insight cards and the summary card use) and
   type it in directly. Good for demoing in person.
+
+Redeeming it anywhere instantly unlocks every Pro surface on the page —
+the locked insight cards, the summary card, all of it — without needing to
+switch tabs away and back or refresh first. This needed a small pub-sub
+mechanism (`subscribeProUnlocked` in `monetization.js`, consumed via the
+`useProUnlocked()` hook) rather than each component just reading the
+unlock flag into its own local state once on mount, which was the
+original (buggy) approach — a change made in one already-open view had no
+way to reach a sibling view's separately-initialized state without it.
 
 Same honesty caveat as everything else Pro-related in this app, just more
 directly relevant here: this code lives in client-side JavaScript, so

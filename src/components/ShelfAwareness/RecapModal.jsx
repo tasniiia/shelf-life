@@ -3,11 +3,11 @@ import { toPng } from 'html-to-image';
 import { X, Download, Sparkles } from 'lucide-react';
 import RecapCard from './RecapCard';
 import UnlockModal from './UnlockModal';
-import { isProUnlocked } from '../../lib/monetization';
+import { useProUnlocked } from '../../hooks/useProUnlocked';
 
 export default function RecapModal({ heroStats, topInsights, scopeLabel, onClose }) {
   const cardRef = useRef(null);
-  const [unlocked, setUnlocked] = useState(isProUnlocked());
+  const unlocked = useProUnlocked();
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
   const [error, setError] = useState(null);
 
@@ -70,10 +70,7 @@ export default function RecapModal({ heroStats, topInsights, scopeLabel, onClose
       <UnlockModal
         open={unlockModalOpen}
         onClose={() => setUnlockModalOpen(false)}
-        onUnlocked={() => {
-          setUnlocked(true);
-          setUnlockModalOpen(false);
-        }}
+        onUnlocked={() => setUnlockModalOpen(false)}
       />
     </div>
   );

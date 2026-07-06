@@ -62,17 +62,18 @@ export function buildSlides({ metrics, library, year = 'all' }) {
     });
   }
 
-  if (metrics.temporalWhiplash) {
-    const { min, max, spread, decades } = metrics.temporalWhiplash;
+  if (metrics.pageExtremes) {
+    const { shortest, longest, ratio } = metrics.pageExtremes;
     slides.push({
-      id: 'whiplash',
-      kind: 'histogram',
-      eyebrow: 'Temporal whiplash',
-      headline: `${spread}-year spread`,
-      histogram: decades,
-      histogramColor: 'gold',
-      statLabel: `${min}–${max} publication range`,
-      body: `Your reading jumps between eras — from ${min} to ${max} — without much regard for chronology.`,
+      id: 'bookends',
+      kind: 'bookList',
+      eyebrow: 'The Bookends',
+      headline: `${ratio}x the length`,
+      bookList: [
+        { title: shortest.title, author: shortest.author, sublabel: `${shortest.pages}pg \u00b7 shortest` },
+        { title: longest.title, author: longest.author, sublabel: `${longest.pages}pg \u00b7 longest` },
+      ],
+      body: `Your shortest read: "${shortest.title}" (${shortest.pages} pages). Your longest: "${longest.title}" (${longest.pages} pages) — ${ratio}x the length.`,
     });
   }
 
@@ -376,7 +377,7 @@ export function buildSlides({ metrics, library, year = 'all' }) {
   const NOTABILITY_SCORERS = {
     commitment: () =>
       metrics.commitment?.finishRate != null ? clamp01(Math.abs(metrics.commitment.finishRate - 0.5) * 2) : 0.3,
-    whiplash: () => (metrics.temporalWhiplash ? clamp01(metrics.temporalWhiplash.spread / 100) : 0),
+    bookends: () => (metrics.pageExtremes ? clamp01(metrics.pageExtremes.ratio / 15) : 0),
     timeJump: () => (metrics.biggestTimeJump ? clamp01(0.5 + metrics.biggestTimeJump.gap / 100) : 0),
     seriesCommitment: () => (metrics.seriesCommitment ? clamp01(Math.abs(metrics.seriesCommitment.pct - 50) / 50) : 0),
     devotedFan: () => (metrics.devotedFan ? clamp01(metrics.devotedFan.count / 8) : 0),

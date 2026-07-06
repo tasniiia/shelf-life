@@ -21,6 +21,16 @@
 
 const UNLOCK_KEY = 'shelflife.proUnlocked';
 
+// A tiny pub-sub so every component checking Pro status updates instantly
+// when it changes ANYWHERE, not just next time that component happens to
+// remount. Without this, redeeming a promo code in one already-open view
+// wouldn't be reflected in a sibling view until you switched tabs away and
+// back or refreshed — each component was reading isProUnlocked() into its
+// own local state exactly once, on mount, with no way to know the flag had
+// changed elsewhere in the same page session. See useProUnlocked.js for
+// the hook that consumes this.
+const listeners = new Set();
+
 export function isProUnlocked() {
   if (typeof localStorage === 'undefined') return false;
   return localStorage.getItem(UNLOCK_KEY) === 'true';
@@ -30,6 +40,12 @@ export function setProUnlocked(value) {
   if (typeof localStorage === 'undefined') return;
   if (value) localStorage.setItem(UNLOCK_KEY, 'true');
   else localStorage.removeItem(UNLOCK_KEY);
+  listeners.forEach((fn) => fn(value));
+}
+
+export function subscribeProUnlocked(callback) {
+  listeners.add(callback);
+  return () => listeners.delete(callback);
 }
 
 // --- Stripe checkout scaffold -----------------------------------------
@@ -99,7 +115,7 @@ export async function startProCheckout() {
 // something to treat as a locked door.
 //
 // Change this to whatever phrase you want before sharing it around.
-const PROMO_CODE = 'shelflife-preview';
+const PROMO_CODE = 'SHELF';
 
 export function isPromoCodeValid(code) {
   return String(code || '').trim().toLowerCase() === PROMO_CODE.toLowerCase();
@@ -111,7 +127,7 @@ export function isPromoCodeValid(code) {
  * the flag from the URL and persists the unlock locally, then cleans the
  * URL so refreshing doesn't re-trigger anything. Also checks for a
  * `?promo=` URL param, so you can share a single link (e.g.
- * yoursite.com?promo=shelflife-preview) that unlocks Pro on load, without
+ * yoursite.com?promo=SHELF) that unlocks Pro on load, without
  * anyone needing to find or type anything themselves.
  */
 export function checkForCheckoutReturn() {

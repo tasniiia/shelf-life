@@ -28,38 +28,21 @@ export function commitmentRatio({ read, dnf, currentlyReading }) {
   return { finished, abandoned, stalled, finishRate, verdict };
 }
 
-// 2. Temporal Whiplash — spread of original publication years read
-export function temporalWhiplash(read) {
-  const years = read.map((b) => b.originalPublicationYear).filter(Boolean);
-  if (!years.length) return null;
-  const min = Math.min(...years);
-  const max = Math.max(...years);
-  const spread = max - min;
-  const sd = Math.round(stddev(years));
+// 2. The Bookends — your shortest and longest reads, as a pair. Deliberately
+// an "extremes" framing rather than a distribution/range one, to stay
+// genuinely distinct from every other metric here (Temporal Whiplash used
+// to occupy this slot with a full-range framing that ended up feeling
+// redundant against The Time Jump's similar "big gap" story).
+export function pageExtremes(read) {
+  const withPages = read.filter((b) => b.pages);
+  if (withPages.length < 3) return null;
 
-  const decadeCounts = {};
-  years.forEach((y) => {
-    const decade = Math.floor(y / 10) * 10;
-    decadeCounts[decade] = (decadeCounts[decade] || 0) + 1;
-  });
-  let decades = Object.entries(decadeCounts)
-    .map(([decade, count]) => ({ label: `${decade}s`, count, decade: Number(decade) }))
-    .sort((a, b) => a.decade - b.decade);
+  const shortest = withPages.reduce((min, b) => (b.pages < min.pages ? b : min));
+  const longest = withPages.reduce((max, b) => (b.pages > max.pages ? b : max));
+  if (shortest === longest) return null; // every book was the exact same length — nothing to contrast
 
-  // A card is only wide enough for ~6 legible bars — merge everything
-  // before the most recent 5 decades into one "Before Xs" bucket rather
-  // than truncating labels down to unreadable fragments.
-  const MAX_BARS = 6;
-  if (decades.length > MAX_BARS) {
-    const keepCount = MAX_BARS - 1;
-    const recent = decades.slice(-keepCount);
-    const older = decades.slice(0, -keepCount);
-    const olderTotal = older.reduce((sum, d) => sum + d.count, 0);
-    const cutoffLabel = `Before ${recent[0].label}`;
-    decades = [{ label: cutoffLabel, count: olderTotal, decade: older[0].decade }, ...recent];
-  }
-
-  return { min, max, spread, stddev: sd, decades };
+  const ratio = Math.round(longest.pages / shortest.pages);
+  return { shortest, longest, ratio };
 }
 
 // 4a. The Devoted Fan — the author you've read the most books by.
@@ -471,7 +454,7 @@ export function computeAllMetrics(library) {
   const readingVelocity = computeReadingVelocity(read);
   return {
     commitment: commitmentRatio({ read, dnf, currentlyReading }),
-    temporalWhiplash: temporalWhiplash(read),
+    pageExtremes: pageExtremes(read),
     devotedFan: devotedFan(read),
     formatLoyalist: formatLoyalist(read),
     earlyAdopter: earlyAdopterProfile(read),
