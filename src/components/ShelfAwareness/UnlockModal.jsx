@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, Sparkles } from 'lucide-react';
 import Button from '../ui/Button';
-import { isStripeConfigured, startRecapCheckout, setRecapUnlocked } from '../../lib/monetization';
+import { isStripeConfigured, startProCheckout, setProUnlocked } from '../../lib/monetization';
 
 export default function UnlockModal({ open, onClose, onUnlocked }) {
   const [error, setError] = useState(null);
@@ -13,7 +13,7 @@ export default function UnlockModal({ open, onClose, onUnlocked }) {
     setError(null);
     setIsStarting(true);
     try {
-      await startRecapCheckout(); // redirects on success, so this line only "returns" on failure
+      await startProCheckout(); // redirects on success, so this line only "returns" on failure
     } catch (e) {
       setError(e.message);
     } finally {
@@ -22,7 +22,7 @@ export default function UnlockModal({ open, onClose, onUnlocked }) {
   }
 
   function handleDevUnlock() {
-    setRecapUnlocked(true);
+    setProUnlocked(true);
     onUnlocked();
   }
 
@@ -33,11 +33,12 @@ export default function UnlockModal({ open, onClose, onUnlocked }) {
           <X className="w-5 h-5" />
         </button>
 
-        <p className="ledger-label mb-2">Shelf Awareness summary, unwatermarked</p>
-        <h2 className="font-display text-xl font-semibold mb-3">Remove the watermark</h2>
+        <p className="ledger-label mb-2">ShelfLife Pro</p>
+        <h2 className="font-display text-xl font-semibold mb-3">Unlock the full picture</h2>
         <p className="text-sm text-ink/70 leading-relaxed mb-5">
-          A small one-time unlock removes the "made with shelflife.app" credit and unlocks exporting the full
-          multi-card carousel, not just the single highlight image.
+          A single $2.99 one-time unlock: removes the "made with shelflife.app" credit from your shareable
+          summary (plus unlocks exporting the full multi-card carousel), and unlocks a few bonus insight cards
+          in your Shelf Awareness deck.
         </p>
 
         {!isStripeConfigured() ? (
@@ -56,7 +57,7 @@ export default function UnlockModal({ open, onClose, onUnlocked }) {
         )}
 
         <Button onClick={handleUnlock} disabled={isStarting || !isStripeConfigured()} className="w-full mb-2">
-          <Sparkles className="w-4 h-4" /> Unlock now
+          <Sparkles className="w-4 h-4" /> Unlock Pro — $2.99
         </Button>
 
         {import.meta.env.DEV && (

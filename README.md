@@ -49,10 +49,13 @@ Two features:
    - **Share My Shelf Awareness Summary** composites your hero stats + the 3 most
      notable insights (ranked by how far each number sits from a "boring
      middle") into one single shareable image with a short description per
-     insight — a highlight reel, not the full 19-card deck. Free exports
-     carry a small watermark; a one-time unlock removes it (see
-     "Monetization setup" below — this needs a real Stripe account before
-     it's live).
+     insight — a highlight reel, not the full 19-card deck.
+   - **3 bonus cards** (Seasonal Velocity, Page-to-Rating ROI, TBR Declutter
+     List) are locked behind **ShelfLife Pro**, a single $2.99 one-time
+     unlock that also removes the watermark from the shareable summary
+     above. Locked cards show a padlock and a blurred preview rather than
+     the real numbers — see the honesty note in "Monetization setup" below
+     about exactly what that protects against (and doesn't).
 
 ## Installing as an app (PWA)
 

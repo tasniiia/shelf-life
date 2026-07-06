@@ -1,18 +1,32 @@
-// Unlock mechanism for the Shelf Awareness summary card's paid tier (remove
-// watermark + multi-card carousel export). Since this app has no accounts
-// and no backend by design, "paid" is tracked as a simple localStorage
-// flag on this browser — consistent with how everything else here works,
-// and an honest trade-off: a purchase only unlocks this specific browser,
-// not an account that follows the person across devices.
+// Unlock mechanism for ShelfLife Pro — a single one-time purchase that
+// covers two perks: removing the watermark from the Shelf Awareness share
+// image, and unlocking a handful of bonus insight cards in the Shelf
+// Awareness deck. Since this app has no accounts and no backend by design,
+// "paid" is tracked as a simple localStorage flag on this browser —
+// consistent with how everything else here works, and an honest
+// trade-off: a purchase only unlocks this specific browser, not an
+// account that follows the person across devices.
+//
+// IMPORTANT — what this flag actually is and isn't: it's a soft UX
+// deterrent, not a real access-control boundary. Nothing about a
+// backend-less, all-client-side app can make a paywall genuinely secure —
+// anyone can open the browser console and flip this flag themselves in
+// about ten seconds, the same way they could with any client-only "gate."
+// Blurring content instead of hiding it with CSS raises the bar slightly
+// (it's not a one-line DevTools fix) but doesn't change that fundamental
+// fact, and no code comment or UI copy anywhere in this app should imply
+// otherwise. If real enforcement ever matters, it needs a backend that
+// withholds the actual data server-side — a genuinely different
+// architecture than this app has chosen.
 
-const UNLOCK_KEY = 'shelflife.recapUnlocked';
+const UNLOCK_KEY = 'shelflife.proUnlocked';
 
-export function isRecapUnlocked() {
+export function isProUnlocked() {
   if (typeof localStorage === 'undefined') return false;
   return localStorage.getItem(UNLOCK_KEY) === 'true';
 }
 
-export function setRecapUnlocked(value) {
+export function setProUnlocked(value) {
   if (typeof localStorage === 'undefined') return;
   if (value) localStorage.setItem(UNLOCK_KEY, 'true');
   else localStorage.removeItem(UNLOCK_KEY);
@@ -31,11 +45,19 @@ export function setRecapUnlocked(value) {
 //   3. A webhook handler (api/stripe-webhook.js.example, same folder) that
 //      confirms payment and — since there's no backend database to record
 //      "this user paid" — redirects back to the app with a success flag in
-//      the URL, which setRecapUnlocked() then reads and stores locally.
+//      the URL, which setProUnlocked() then reads and stores locally.
 //
 // Until all three exist, isStripeConfigured() returns false and the UI
 // should show the honest "payments aren't connected yet" state rather
 // than a broken checkout button.
+//
+// Also worth being direct about: even once Stripe is wired up, the
+// success-redirect route sets the unlock flag unconditionally the moment
+// someone lands on it, with no server-side verification that a payment
+// actually happened. That's an inherent limitation of a no-backend
+// checkout flow, not an oversight — anyone who discovers that URL
+// directly gets a free unlock. Closing that gap for real requires a
+// database and a verified webhook, i.e. an actual backend.
 
 const STRIPE_PRICE_ID = 'price_REPLACE_ME'; // TODO: paste your real Stripe Price ID here
 const CHECKOUT_ENDPOINT = '/api/create-checkout-session';
@@ -44,7 +66,7 @@ export function isStripeConfigured() {
   return !STRIPE_PRICE_ID.includes('REPLACE_ME');
 }
 
-export async function startRecapCheckout() {
+export async function startProCheckout() {
   if (!isStripeConfigured()) {
     throw new Error(
       "Payments aren't connected yet. Set a real Stripe Price ID in src/lib/monetization.js, " +
@@ -74,7 +96,7 @@ export async function startRecapCheckout() {
 export function checkForCheckoutReturn() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('unlocked') === 'true') {
-    setRecapUnlocked(true);
+    setProUnlocked(true);
     params.delete('unlocked');
     const cleanUrl = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`;
     window.history.replaceState({}, '', cleanUrl);

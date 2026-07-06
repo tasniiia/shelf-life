@@ -6,12 +6,15 @@ import Button from '../ui/Button';
 import Slide from './Slide';
 import ShelfAwarenessGrid from './ShelfAwarenessGrid';
 import RecapModal from './RecapModal';
+import UnlockModal from './UnlockModal';
 import { computeAllMetrics, getAvailableYears, filterLibraryByYear } from '../../lib/metrics';
 import { buildSlides, buildHeroStats, pickTopInsights } from '../../lib/slides';
+import { isProUnlocked } from '../../lib/monetization';
 
 export default function ShelfAwareness({ library }) {
   const availableYears = useMemo(() => getAvailableYears(library), [library]);
   const [scope, setScope] = useState('all');
+  const [proUnlocked, setProUnlockedState] = useState(isProUnlocked());
 
   const scopedLibrary = useMemo(() => filterLibraryByYear(library, scope), [library, scope]);
   const metrics = useMemo(() => computeAllMetrics(scopedLibrary), [scopedLibrary]);
@@ -21,13 +24,25 @@ export default function ShelfAwareness({ library }) {
     scope,
   ]);
   const heroStats = useMemo(() => buildHeroStats(metrics, scopedLibrary), [metrics, scopedLibrary]);
-  const topInsights = useMemo(() => pickTopInsights(slides, 3), [slides]);
+  // Locked-and-not-yet-purchased cards must never surface in the free
+  // shareable summary — otherwise generating that image would be a trivial
+  // way to bypass the paywall entirely.
+  const shareableSlides = useMemo(
+    () => slides.filter((s) => !s.locked || proUnlocked),
+    [slides, proUnlocked]
+  );
+  const topInsights = useMemo(() => pickTopInsights(shareableSlides, 3), [shareableSlides]);
 
   const [error, setError] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [recapOpen, setRecapOpen] = useState(false);
+  const [unlockModalOpen, setUnlockModalOpen] = useState(false);
   const [current, setCurrent] = useState(0);
   const slideRef = useRef(null);
+
+  function handleRequestUnlock() {
+    setUnlockModalOpen(true);
+  }
 
   function handleGenerate() {
     setError(null);
@@ -131,6 +146,15 @@ export default function ShelfAwareness({ library }) {
             onClose={() => setRecapOpen(false)}
           />
         )}
+
+        <UnlockModal
+          open={unlockModalOpen}
+          onClose={() => setUnlockModalOpen(false)}
+          onUnlocked={() => {
+            setProUnlockedState(true);
+            setUnlockModalOpen(false);
+          }}
+        />
       </div>
     );
   }
@@ -171,7 +195,14 @@ export default function ShelfAwareness({ library }) {
               transition={{ duration: 0.2 }}
               className="absolute inset-0"
             >
-              <Slide ref={slideRef} slide={slide} index={current} total={slides.length} />
+              <Slide
+                ref={slideRef}
+                slide={slide}
+                index={current}
+                total={slides.length}
+                isProUnlocked={proUnlocked}
+                onRequestUnlock={handleRequestUnlock}
+              />
             </motion.div>
           </AnimatePresence>
 
@@ -215,8 +246,22 @@ export default function ShelfAwareness({ library }) {
 
       {/* Desktop: all cards on one page, flip to reveal */}
       <div className="hidden md:block">
-        <ShelfAwarenessGrid slides={slides} onClose={() => setIsPlaying(false)} />
+        <ShelfAwarenessGrid
+          slides={slides}
+          onClose={() => setIsPlaying(false)}
+          isProUnlocked={proUnlocked}
+          onRequestUnlock={handleRequestUnlock}
+        />
       </div>
+
+      <UnlockModal
+        open={unlockModalOpen}
+        onClose={() => setUnlockModalOpen(false)}
+        onUnlocked={() => {
+          setProUnlockedState(true);
+          setUnlockModalOpen(false);
+        }}
+      />
     </>
   );
 }

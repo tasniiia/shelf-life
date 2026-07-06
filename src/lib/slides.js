@@ -192,6 +192,7 @@ export function buildSlides({ metrics, library, year = 'all' }) {
     const { buckets, peakMonth, peakPages, troughMonth, persona } = metrics.seasonalVelocity;
     slides.push({
       id: 'seasonalVelocity',
+      locked: true, // ShelfLife Pro bonus card
       kind: 'histogram',
       eyebrow: 'Seasonal velocity',
       headline: persona,
@@ -235,6 +236,7 @@ export function buildSlides({ metrics, library, year = 'all' }) {
       : `Medium-length books are your comfort zone — averaging ${best.avg.toFixed(1)} stars.`;
     slides.push({
       id: 'pageRatingRoi',
+      locked: true, // ShelfLife Pro bonus card
       kind: 'rankedBars',
       eyebrow: 'The page-to-rating ROI',
       headline: 'Length vs. rating',
@@ -319,6 +321,7 @@ export function buildSlides({ metrics, library, year = 'all' }) {
   if (metrics.tbrDeclutter?.length) {
     slides.push({
       id: 'tbrDeclutter',
+      locked: true, // ShelfLife Pro bonus card
       kind: 'bookList',
       eyebrow: 'TBR declutter list',
       headline: 'Time to decide',

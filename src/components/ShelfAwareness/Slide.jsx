@@ -1,8 +1,11 @@
 import { forwardRef } from 'react';
 import Stamp from '../ui/Stamp';
 import { Donut, Histogram, RankedBars } from '../ui/charts';
+import LockedTeaser, { LockBadge } from './LockedTeaser';
 
-const Slide = forwardRef(function Slide({ slide, index, total }, ref) {
+const Slide = forwardRef(function Slide({ slide, index, total, isProUnlocked, onRequestUnlock }, ref) {
+  const isLocked = slide.locked && !isProUnlocked;
+
   return (
     <div
       ref={ref}
@@ -10,10 +13,18 @@ const Slide = forwardRef(function Slide({ slide, index, total }, ref) {
     >
       <div className="flex items-center justify-between">
         <p className="ledger-label">{slide.eyebrow}</p>
-        <Stamp size="sm">{`${index + 1}/${total}`}</Stamp>
+        {isLocked ? (
+          <LockBadge className="w-4 h-4 text-ink/30" />
+        ) : (
+          <Stamp size="sm">{`${index + 1}/${total}`}</Stamp>
+        )}
       </div>
 
       <div className="flex-1 flex flex-col justify-center py-8">
+        {isLocked ? (
+          <LockedTeaser slide={slide} onUnlock={onRequestUnlock} />
+        ) : (
+          <>
         {slide.kind === 'intro' && (
           <>
             <h2 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight leading-tight mb-4">
@@ -153,6 +164,8 @@ const Slide = forwardRef(function Slide({ slide, index, total }, ref) {
               ))}
             </div>
             <p className="text-ink/70 leading-relaxed">{slide.body}</p>
+          </>
+        )}
           </>
         )}
       </div>

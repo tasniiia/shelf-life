@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import FlipCard from './FlipCard';
 
-export default function ShelfAwarenessGrid({ slides, onClose }) {
+export default function ShelfAwarenessGrid({ slides, onClose, isProUnlocked, onRequestUnlock }) {
   const heroStats = slides.find((s) => s.id === 'intro')?.heroStats;
 
   return (
@@ -35,7 +35,13 @@ export default function ShelfAwarenessGrid({ slides, onClose }) {
 
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
           {slides.map((slide, i) => (
-            <FlipCard key={slide.id} slide={slide} index={i} />
+            <FlipCard
+              key={slide.id}
+              slide={slide}
+              index={i}
+              isProUnlocked={isProUnlocked}
+              onRequestUnlock={onRequestUnlock}
+            />
           ))}
         </div>
       </div>
