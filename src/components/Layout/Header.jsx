@@ -39,15 +39,15 @@ export default function Header({ view, onChangeView, hasLibrary, onNewUpload }) 
       </div>
 
       {hasLibrary && (
-        <nav className="sm:hidden flex border-t border-line">
+        <nav className="sm:hidden flex border-t border-line items-stretch">
           <TabButton full active={view === 'vibe'} onClick={() => onChangeView('vibe')}>
             What's Next?
           </TabButton>
           <TabButton full active={view === 'awareness'} onClick={() => onChangeView('awareness')}>
-            Awareness
+            Shelf Awareness
           </TabButton>
           <TabButton full active={view === 'vocab'} onClick={() => onChangeView('vocab')}>
-            Vocab
+            Vocabulary Vault
           </TabButton>
         </nav>
       )}
@@ -60,8 +60,8 @@ function TabButton({ active, onClick, children, full }) {
     <button
       onClick={onClick}
       className={clsx(
-        'font-medium transition-colors whitespace-nowrap',
-        full ? 'flex-1 py-3 px-1 text-xs' : 'text-sm px-4 py-2 rounded-full',
+        'font-medium transition-colors text-center leading-tight',
+        full ? 'flex-1 py-2.5 px-1.5 text-xs' : 'text-sm px-4 py-2 rounded-full whitespace-nowrap',
         active ? 'bg-ink text-paper' : 'text-ink/60 hover:text-ink'
       )}
     >
