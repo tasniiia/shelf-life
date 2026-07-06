@@ -175,6 +175,7 @@ export function buildSlides({ metrics, library, year = 'all' }) {
     const { avgGapDays, verdict, buckets } = metrics.pace;
     slides.push({
       id: 'pace',
+      locked: true, // ShelfLife Pro bonus card
       kind: 'histogram',
       eyebrow: 'Reading rhythm',
       headline: verdict,
@@ -212,6 +213,7 @@ export function buildSlides({ metrics, library, year = 'all' }) {
     const { avg, pctFiveStar, verdict, counts } = metrics.gradeCurve;
     slides.push({
       id: 'gradeCurve',
+      locked: true, // ShelfLife Pro bonus card
       kind: 'histogram',
       eyebrow: 'The grade curve',
       headline: verdict,
@@ -255,6 +257,7 @@ export function buildSlides({ metrics, library, year = 'all' }) {
     const { pct } = metrics.diet;
     slides.push({
       id: 'diet',
+      locked: true, // ShelfLife Pro bonus card
       kind: 'bars',
       eyebrow: 'Literary diet',
       headline: 'Your page-count breakdown',
@@ -271,6 +274,7 @@ export function buildSlides({ metrics, library, year = 'all' }) {
     const { reviewed, notReviewed, pct, verdict } = metrics.documentarian;
     slides.push({
       id: 'documentarian',
+      locked: true, // ShelfLife Pro bonus card
       kind: 'donut',
       eyebrow: 'The documentarian',
       headline: verdict,
@@ -294,6 +298,7 @@ export function buildSlides({ metrics, library, year = 'all' }) {
     const { book, yearsWaiting } = metrics.graveyard;
     slides.push({
       id: 'graveyard',
+      locked: true, // ShelfLife Pro bonus card
       kind: 'book',
       eyebrow: 'To-read graveyard',
       headline: book.title,
@@ -306,6 +311,7 @@ export function buildSlides({ metrics, library, year = 'all' }) {
     const { totalBooks, years, days } = metrics.backlogClear;
     slides.push({
       id: 'backlogClear',
+      locked: true, // ShelfLife Pro bonus card
       kind: 'stat',
       eyebrow: 'Backlog clear time',
       headline: `${totalBooks} books waiting`,
@@ -338,6 +344,7 @@ export function buildSlides({ metrics, library, year = 'all' }) {
     const { addedLastYear, readLastYear, net, verdict } = metrics.backlogTrend;
     slides.push({
       id: 'backlogTrend',
+      locked: true, // ShelfLife Pro bonus card
       kind: 'stat',
       eyebrow: 'Backlog trend',
       headline: verdict,

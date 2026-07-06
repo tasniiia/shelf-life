@@ -51,7 +51,7 @@ export default function LockedTeaser({ slide, onUnlock, compact = false }) {
           Dig deeper into your library.
         </p>
         {!compact && (
-          <p className="text-xs text-ink/60 mb-4">Unlock this insight, plus a couple more bonus stats.</p>
+          <p className="text-xs text-ink/60 mb-4">Unlock this insight, plus several more advanced reading metrics.</p>
         )}
         <button
           onClick={(e) => {

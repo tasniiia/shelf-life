@@ -36,9 +36,8 @@ export default function UnlockModal({ open, onClose, onUnlocked }) {
         <p className="ledger-label mb-2">ShelfLife Pro</p>
         <h2 className="font-display text-xl font-semibold mb-3">Unlock the full picture</h2>
         <p className="text-sm text-ink/70 leading-relaxed mb-5">
-          A single $2.99 one-time unlock: removes the "made with shelflife.app" credit from your shareable
-          summary (plus unlocks exporting the full multi-card carousel), and unlocks a few bonus insight cards
-          in your Shelf Awareness deck.
+          A single $2.99 one-time unlock: unlocks 10 additional insight cards in your Shelf Awareness deck, plus
+          lets you view and download your shareable Shelf Awareness Summary — watermark-free.
         </p>
 
         {!isStripeConfigured() ? (
