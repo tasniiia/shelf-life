@@ -1,8 +1,17 @@
-import { X } from 'lucide-react';
+import { X, Share2 } from 'lucide-react';
 import FlipCard from './FlipCard';
 
-export default function ShelfAwarenessGrid({ slides, onClose, isProUnlocked, onRequestUnlock }) {
+export default function ShelfAwarenessGrid({ slides, onClose, isProUnlocked, onRequestUnlock, onOpenSummary }) {
   const heroStats = slides.find((s) => s.id === 'intro')?.heroStats;
+
+  // The intro/outro cards work as narrative bookends on mobile's swipeable
+  // story, but they're redundant here — the hero stats banner already
+  // does the intro's "here's your overview" job above the grid, and a
+  // grid you can already see all of at once doesn't need a sign-off card.
+  // Renumbered cleanly from the filtered list rather than keeping each
+  // card's original position, so cards don't display as e.g. "No. 002"
+  // through "No. 018" with 1 and 19 mysteriously missing.
+  const contentSlides = slides.filter((s) => s.id !== 'intro' && s.id !== 'outro');
 
   return (
     <div className="fixed inset-0 z-40 bg-ink overflow-y-auto">
@@ -34,7 +43,7 @@ export default function ShelfAwarenessGrid({ slides, onClose, isProUnlocked, onR
         )}
 
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-          {slides.map((slide, i) => (
+          {contentSlides.map((slide, i) => (
             <FlipCard
               key={slide.id}
               slide={slide}
@@ -43,6 +52,23 @@ export default function ShelfAwarenessGrid({ slides, onClose, isProUnlocked, onR
               onRequestUnlock={onRequestUnlock}
             />
           ))}
+
+          {/* Capstone tile — deliberately not a numbered insight card, just
+              a clean conclusion to browsing the deck. Opens the exact same
+              summary modal as the pre-generate screen's button; that
+              button stays too, since it serves a genuinely different
+              moment (a fast path to the summary for someone who hasn't
+              browsed the deck at all), not a redundant duplicate of this. */}
+          <button
+            onClick={onOpenSummary}
+            className="aspect-[3/4] catalog-card p-4 flex flex-col items-center justify-center text-center gap-3 border-2 border-dashed border-stamp/40 hover:border-stamp hover:bg-card/80 transition-colors"
+          >
+            <Share2 className="w-6 h-6 text-stamp" />
+            <div>
+              <p className="font-display text-base font-semibold leading-snug mb-1">See Your Summary</p>
+              <p className="text-xs text-ink/50">Download and share your recap</p>
+            </div>
+          </button>
         </div>
       </div>
     </div>

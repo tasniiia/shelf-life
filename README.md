@@ -79,22 +79,36 @@ Three features:
 2. **Shelf Awareness** — a recap of your reading habits, computed entirely
    from your CSV. Opens with a **hero stats row** (total books, pages read,
    average rating, finish rate) before diving into 17 detailed insight
-   cards: finish rate, your shortest vs. longest read as a pair ("The
-   Bookends"), the single biggest
+   cards: finish rate, your shortest vs. longest read as a pair with a
+   proportional bar comparing their page counts ("The Bookends"), the
+   single biggest
    publication-year jump between two back-to-back reads, favorite author,
    format preference, early-adopter vs. archive-digger tendency, seasonal
    reading rhythm (with a "Winter Hibernator"/"Summer Sprinter" persona),
    your own rating distribution, whether long books actually earn higher
    ratings from you, page-count mix, series commitment, review-writing
-   habits, your oldest unread book, **backlog clear time** (how long your
+   habits, your oldest unread book (title withheld on the front of the
+   card — flip to actually reveal it), **backlog clear time** (how long your
    whole to-read shelf would take at your actual reading pace), a **TBR
    declutter list** (the 3 books that have waited longest), and whether
    your backlog is growing or shrinking over the past year. Choose **All
    Time** or any year you've actually finished a book in for an **Annual
    Recap** scoped to just that year.
-   - On mobile, it plays as a full-screen, tap-through story.
+   - On mobile, it plays as a full-screen, tap-through story, opening on an
+     intro card and closing on a sign-off card — genuine narrative
+     bookends for a swipe-through format.
    - On desktop, every card is laid out on one page — click any card to
-     flip it over and reveal the detail on the back.
+     flip it over and reveal the detail on the back. The intro/outro
+     cards are deliberately **not** part of this grid (desktop-only
+     difference): the hero stats banner above the grid already does the
+     intro's "here's your overview" job, and a grid you can already see
+     all of at once doesn't need a sign-off card the way a mobile swipe-
+     through does. In their place, a dashed capstone tile at the end of
+     the grid opens the same shareable summary described below — a
+     second entry point to it, not a redundant one, since the summary
+     button on the pre-generate screen serves someone who hasn't browsed
+     the deck at all, while this one is the natural conclusion after
+     having browsed everything.
    - **Share My Shelf Awareness Summary** composites your hero stats + the 3 most
      notable insights (ranked by how far each number sits from a "boring
      middle") into one single shareable image with a short description per
@@ -111,20 +125,18 @@ Three features:
      a flip to discover they're locked — see the honesty note in
      "Monetization setup" below about exactly what that protects against
      (and doesn't).
-   - **3 more Pro cards, derived from Vocabulary Vault**, appended just
+   - **2 more Pro cards, derived from Vocabulary Vault**, appended just
      before the closing card once that data loads (it lives in IndexedDB,
      async, unlike the rest of this synchronously-built deck, so these
      arrive an instant after everything else — imperceptible in practice):
      **Scrabble Power** (a deliberately gamified point score across your
-     logged words, using standard Scrabble tile values), **Your Linguistic
+     logged words, using standard Scrabble tile values) and **Your Linguistic
      Era** (a Spotify-Wrapped-style persona based on the publication era of
      the books your words came from — cross-referenced against your
      current library at display time, not stored on the word itself, so it
-     works retroactively for every existing entry), and **Where Your Words
-     Come From** (which genre category has taught you the most new words —
-     fetches genre data only for the specific handful of books your
-     vocabulary is actually linked to, not your whole read shelf, to keep
-     it cheap).
+     works retroactively for every existing entry). A third card, "Where
+     Your Words Come From" (genre density), was tried and retired — it
+     felt thin next to these two.
 
 3. **Vocabulary Vault** — log a word you ran into while reading, and it
    looks up the definition, part of speech, and phonetic spelling for you

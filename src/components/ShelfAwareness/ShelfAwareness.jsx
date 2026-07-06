@@ -11,14 +11,7 @@ import { computeAllMetrics, getAvailableYears, filterLibraryByYear } from '../..
 import { buildSlides, buildHeroStats, pickTopInsights } from '../../lib/slides';
 import { useProUnlocked } from '../../hooks/useProUnlocked';
 import { getAllVocabEntries } from '../../lib/vocabularyDb';
-import { getBookMetadata } from '../../lib/bookMetadata';
-import {
-  computeScrabblePower,
-  computeLinguisticEra,
-  uniqueSourceBooksForGenre,
-  computeGenreDialect,
-  buildVocabInsightSlides,
-} from '../../lib/vocabularyInsights';
+import { computeScrabblePower, computeLinguisticEra, buildVocabInsightSlides } from '../../lib/vocabularyInsights';
 
 export default function ShelfAwareness({ library }) {
   const availableYears = useMemo(() => getAvailableYears(library), [library]);
@@ -35,7 +28,7 @@ export default function ShelfAwareness({ library }) {
 
   // Vocabulary Vault lives in IndexedDB, which is async, unlike the rest
   // of this deck (built synchronously from the CSV-derived library) — so
-  // these 3 cards necessarily arrive an instant after the rest of the deck
+  // these cards necessarily arrive an instant after the rest of the deck
   // renders, once this resolves, rather than being part of the same
   // synchronous buildSlides() pass.
   const [vocabSlides, setVocabSlides] = useState([]);
@@ -44,33 +37,13 @@ export default function ShelfAwareness({ library }) {
     const scopeLabel = scope === 'all' ? 'All Time' : String(scope);
 
     getAllVocabEntries()
-      .then(async (entries) => {
+      .then((entries) => {
         if (cancelled || !entries.length) return;
 
         const scrabblePower = computeScrabblePower(entries, scope);
         const linguisticEra = computeLinguisticEra(entries, library, scope);
 
-        // Genre Dialect needs a small targeted fetch — only for the
-        // specific books vocab words are actually linked to, not the
-        // whole read shelf (see the chat note on why that distinction
-        // matters). Reuses the same cache as every other genre lookup in
-        // the app, so repeat visits cost nothing.
-        const booksNeedingGenre = uniqueSourceBooksForGenre(entries, library, scope);
-        const genreByBook = new Map();
-        await Promise.all(
-          booksNeedingGenre.map(async (book) => {
-            try {
-              const meta = await getBookMetadata(book);
-              if (meta?.genres?.size) genreByBook.set(`${book.title}::${book.author}`, meta.genres);
-            } catch (err) {
-              console.warn(`[ShelfLife] Genre lookup failed for "${book.title}":`, err.message || err);
-            }
-          })
-        );
-        if (cancelled) return;
-        const genreDialect = computeGenreDialect(entries, library, scope, genreByBook);
-
-        setVocabSlides(buildVocabInsightSlides({ scrabblePower, linguisticEra, genreDialect, scopeLabel }));
+        setVocabSlides(buildVocabInsightSlides({ scrabblePower, linguisticEra, scopeLabel }));
       })
       .catch((err) => {
         console.warn('[ShelfLife] Could not load vocabulary insights:', err.message || err);
@@ -313,8 +286,18 @@ export default function ShelfAwareness({ library }) {
           onClose={() => setIsPlaying(false)}
           isProUnlocked={proUnlocked}
           onRequestUnlock={handleRequestUnlock}
+          onOpenSummary={() => setRecapOpen(true)}
         />
       </div>
+
+      {recapOpen && (
+        <RecapModal
+          heroStats={heroStats}
+          topInsights={topInsights}
+          scopeLabel={scope === 'all' ? 'All Time' : `${scope} Recap`}
+          onClose={() => setRecapOpen(false)}
+        />
+      )}
 
       <UnlockModal
         open={unlockModalOpen}

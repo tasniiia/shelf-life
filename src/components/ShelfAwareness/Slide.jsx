@@ -166,6 +166,26 @@ const Slide = forwardRef(function Slide({ slide, index, total, isProUnlocked, on
             <p className="text-ink/70 leading-relaxed">{slide.body}</p>
           </>
         )}
+
+        {slide.kind === 'pageBars' && (
+          <>
+            <h2 className="font-display text-2xl font-semibold mb-6">{slide.headline}</h2>
+            <div className="space-y-5 mb-6">
+              {slide.pageBars.map((b, i) => (
+                <div key={i}>
+                  <div className="flex justify-between items-baseline mb-1.5 gap-2">
+                    <span className="font-display text-base font-semibold truncate">{b.title}</span>
+                    <span className="font-mono text-sm text-stamp shrink-0">{b.pages}pg</span>
+                  </div>
+                  <div className="h-3 bg-line rounded-full overflow-hidden">
+                    <div className="h-full bg-stamp rounded-full" style={{ width: `${b.pct}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-ink/70 leading-relaxed">{slide.body}</p>
+          </>
+        )}
           </>
         )}
       </div>

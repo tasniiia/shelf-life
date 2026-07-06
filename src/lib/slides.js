@@ -66,14 +66,21 @@ export function buildSlides({ metrics, library, year = 'all' }) {
     const { shortest, longest, ratio } = metrics.pageExtremes;
     slides.push({
       id: 'bookends',
-      kind: 'bookList',
+      kind: 'pageBars',
       eyebrow: 'The Bookends',
       headline: `${ratio}x the length`,
-      bookList: [
-        { title: shortest.title, author: shortest.author, sublabel: `${shortest.pages}pg \u00b7 shortest` },
-        { title: longest.title, author: longest.author, sublabel: `${longest.pages}pg \u00b7 longest` },
+      pageBars: [
+        {
+          title: shortest.title,
+          author: shortest.author,
+          pages: shortest.pages,
+          // Always keep a minimum sliver visible even at a huge ratio, so
+          // the shorter bar never disappears entirely.
+          pct: Math.max(6, Math.round((100 * shortest.pages) / longest.pages)),
+        },
+        { title: longest.title, author: longest.author, pages: longest.pages, pct: 100 },
       ],
-      body: `Your shortest read: "${shortest.title}" (${shortest.pages} pages). Your longest: "${longest.title}" (${longest.pages} pages) — ${ratio}x the length.`,
+      body: `"${shortest.title}" was a quick one at ${shortest.pages} pages. "${longest.title}" took ${ratio}x as long to get through at ${longest.pages} pages — same reader, wildly different commitments.`,
     });
   }
 

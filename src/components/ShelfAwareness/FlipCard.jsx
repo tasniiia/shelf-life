@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RotateCw, Lock } from 'lucide-react';
+import { RotateCw, Lock, BookOpen } from 'lucide-react';
 import Stamp from '../ui/Stamp';
 import { Donut, Histogram, RankedBars } from '../ui/charts';
 import LockedTeaser from './LockedTeaser';
@@ -70,9 +70,18 @@ export default function FlipCard({ slide, index, isProUnlocked, onRequestUnlock 
                 <p className="font-mono text-3xl font-medium text-stamp leading-none mb-1">{slide.stat}</p>
                 {slide.statLabel && <p className="ledger-label mb-2">{slide.statLabel}</p>}
               </>
+            ) : slide.kind === 'book' ? (
+              <div className="flex flex-col items-center text-center py-4">
+                <BookOpen className="w-8 h-8 text-ink/20 mb-3" />
+                <p className="text-sm text-ink/50">One book has been waiting longer than any other.</p>
+              </div>
             ) : null}
-            <h3 className="font-display text-lg font-semibold leading-snug">{slide.headline}</h3>
-            {slide.author && <p className="text-xs text-ink/50 mt-1">{slide.author}</p>}
+            {slide.kind !== 'book' && (
+              <>
+                <h3 className="font-display text-lg font-semibold leading-snug">{slide.headline}</h3>
+                {slide.author && <p className="text-xs text-ink/50 mt-1">{slide.author}</p>}
+              </>
+            )}
           </div>
 
           <div className="hairline pt-2 flex items-center justify-between">
@@ -130,6 +139,21 @@ export default function FlipCard({ slide, index, isProUnlocked, onRequestUnlock 
                 </div>
               </div>
             )}
+            {slide.kind === 'pageBars' && (
+              <div className="space-y-3 mb-3">
+                {slide.pageBars.map((b, i) => (
+                  <div key={i}>
+                    <div className="flex justify-between items-baseline mb-1 gap-2">
+                      <span className="font-display text-sm font-semibold truncate">{b.title}</span>
+                      <span className="font-mono text-xs text-stamp shrink-0">{b.pages}pg</span>
+                    </div>
+                    <div className="h-2.5 bg-line rounded-full overflow-hidden">
+                      <div className="h-full bg-stamp rounded-full" style={{ width: `${b.pct}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
             {slide.kind === 'bookList' && (
               <div className="space-y-1.5 mb-3">
                 {slide.bookList.map((b, i) => (
@@ -138,6 +162,12 @@ export default function FlipCard({ slide, index, isProUnlocked, onRequestUnlock 
                     <span className="font-mono text-[10px] text-stamp shrink-0">{b.sublabel}</span>
                   </div>
                 ))}
+              </div>
+            )}
+            {slide.kind === 'book' && (
+              <div className="mb-3">
+                <p className="font-display text-lg font-semibold leading-snug">{slide.headline}</p>
+                {slide.author && <p className="text-xs text-ink/50 mt-1">{slide.author}</p>}
               </div>
             )}
             <p className="text-sm text-ink/80 leading-relaxed">{slide.body}</p>

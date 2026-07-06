@@ -113,74 +113,14 @@ export function computeLinguisticEra(entries, library, yearScope) {
   };
 }
 
-const MIN_BOOKS_FOR_GENRE = 2;
-
-/**
- * Returns the unique tracked source books referenced by in-scope entries,
- * for a targeted metadata fetch — deliberately NOT the whole read shelf,
- * see the note in the chat about why that would be a much larger, slower
- * fetch than this single card justifies.
- */
-export function uniqueSourceBooksForGenre(entries, library, yearScope) {
-  const scoped = filterEntriesByScope(entries, yearScope);
-  const seen = new Set();
-  const books = [];
-  for (const entry of scoped) {
-    if (!entry.sourceBookTitle || entry.sourceBookTitle === 'Untracked') continue;
-    const key = `${entry.sourceBookTitle}::${entry.sourceBookAuthor || ''}`;
-    if (seen.has(key)) continue;
-    const match = (library.all || []).find(
-      (b) => b.title === entry.sourceBookTitle && (!entry.sourceBookAuthor || b.author === entry.sourceBookAuthor)
-    );
-    if (match) {
-      seen.add(key);
-      books.push(match);
-    }
-  }
-  return books;
-}
-
-/**
- * Takes pre-fetched genre data (a Map of "title::author" -> genre Set, built
- * by the caller using getBookMetadata for each book from
- * uniqueSourceBooksForGenre) and computes word-density per top genre tag.
- * Kept as a separate, synchronous, pure/testable function rather than
- * doing the fetching in here, so the actual network layer stays entirely
- * in the component.
- */
-export function computeGenreDialect(entries, library, yearScope, genreByBook) {
-  const scoped = filterEntriesByScope(entries, yearScope);
-  const counts = {};
-
-  for (const entry of scoped) {
-    if (!entry.sourceBookTitle || entry.sourceBookTitle === 'Untracked') continue;
-    const match = (library.all || []).find(
-      (b) => b.title === entry.sourceBookTitle && (!entry.sourceBookAuthor || b.author === entry.sourceBookAuthor)
-    );
-    if (!match) continue;
-    const key = `${match.title}::${match.author}`;
-    const genres = genreByBook.get(key);
-    const topGenre = genres && genres.size ? [...genres][0] : null;
-    if (!topGenre) continue;
-    counts[topGenre] = (counts[topGenre] || 0) + 1;
-  }
-
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  if (sorted.length < MIN_BOOKS_FOR_GENRE || sorted.length === 0) return null;
-
-  const [topGenre, topCount] = sorted[0];
-  const runnerUp = sorted[1] || null;
-  return { topGenre, topCount, runnerUp: runnerUp ? { genre: runnerUp[0], count: runnerUp[1] } : null };
-}
-
 /**
  * Converts whichever insights actually had enough data into slide objects
  * matching the shape every other Shelf Awareness card already uses — so
  * they render through the exact same FlipCard/Slide/LockedTeaser
- * components with zero new UI code. All three are Pro-gated, per the
+ * components with zero new UI code. Both are Pro-gated, per the
  * "Vocabulary Vault premium metrics" request.
  */
-export function buildVocabInsightSlides({ scrabblePower, linguisticEra, genreDialect, scopeLabel }) {
+export function buildVocabInsightSlides({ scrabblePower, linguisticEra, scopeLabel }) {
   const slides = [];
   const periodWord = scopeLabel === 'All Time' ? 'all-time' : `${scopeLabel}`;
 
@@ -212,22 +152,6 @@ export function buildVocabInsightSlides({ scrabblePower, linguisticEra, genreDia
       body: `${dominantCount} of ${totalWithYear} words you can trace to a specific book came from the ${eraPhrase}.${
         modernCount ? ` Only ${modernCount} came from the modern era.` : ''
       }`,
-    });
-  }
-
-  if (genreDialect) {
-    const { topGenre, topCount, runnerUp } = genreDialect;
-    slides.push({
-      id: 'genreDialect',
-      kind: 'stat',
-      locked: true,
-      eyebrow: 'Where your words come from',
-      headline: `${topGenre} books taught you the most.`,
-      stat: String(topCount),
-      statLabel: `new words from ${topGenre}`,
-      body: runnerUp
-        ? `${topGenre} gave you ${topCount} new words — more than any other category you've logged. ${runnerUp.genre} came in second with ${runnerUp.count}.`
-        : `${topGenre} gave you ${topCount} new words this period — more than any other category you've logged.`,
     });
   }
 
