@@ -44,6 +44,38 @@ Three features:
    genre data has been fetched, it's never fetched again, even across
    browser sessions. Right after you upload your CSV, the app quietly warms
    this cache for your whole to-read shelf in the background.
+
+   - **Reading Goals**, also on this page, between Currently Reading and
+     the matcher: set your own custom targets — any combination of a type
+     (books read, pages read, new authors, genres explored, or Vocabulary
+     Vault words logged), a number, and a recurring period (month,
+     quarter, year, or all-time). Goals are genuinely recurring, not
+     one-off: a "books this quarter" goal always tracks whichever quarter
+     it currently is, the way a fitness app's weekly step goal resets each
+     week. Hitting a goal earns a 🔥 streak that carries forward each time
+     the period rolls over, checked automatically whenever you open the
+     app.
+     - Books, pages, vocabulary words, and new authors are instant — pure
+       local math against data already loaded. "New authors" specifically
+       means authors you hadn't read *before* the current period started,
+       which costs nothing extra since author name needs no network
+       lookup at all.
+     - "Genres explored" is different on purpose: it measures **genre
+       diversity within the period** (how many different genres you read
+       this quarter), not "genres truly new to you all-time" — that
+       stronger claim would need genre data for your entire reading
+       history just to establish a baseline, a much larger fetch than one
+       goal justifies. It fetches genre data only for the books actually
+       read in that goal's period, reusing the same cache as everything
+       else, so it loads a beat behind the other goal types but costs
+       nothing on repeat visits.
+     - A goal's title (e.g., "10 books this quarter") is always generated
+       from its actual tracked fields, not a free-text label you type in —
+       a custom label like "read more nonfiction" would imply a precision
+       the tracking never actually verifies (it counts by raw type only,
+       never by subject), so keeping the title mechanically derived means
+       it can never overclaim what's really being measured.
+
 2. **Shelf Awareness** — a recap of your reading habits, computed entirely
    from your CSV. Opens with a **hero stats row** (total books, pages read,
    average rating, finish rate) before diving into 17 detailed insight
@@ -253,10 +285,15 @@ src/
     slides.js           # Turns metrics into the Shelf Awareness deck
     vocabulary.js        # Dictionary lookup, book search, export logic
     vocabularyDb.js       # Hand-rolled IndexedDB wrapper for saved words
+    vocabularyInsights.js # Scrabble/Era/Genre Pro cards derived from Vault data
+    goals.js             # Reading Goals period math, progress, streaks
+    goalsDb.js            # Hand-rolled IndexedDB wrapper for goals
   components/
     Layout/          # Header + nav
     Upload/          # CSV drop zone
     WhatsNext/       # Book picker + match result cards
+    CurrentlyReading/ # Hero widget above What's Next
+    ReadingGoals/    # Goal creation form + progress cards
     VocabularyVault/ # Quick-add form + dashboard grid
     ShelfAwareness/  # Mobile story player + desktop flip-card grid
     ui/              # Shared Button, Card, Stamp primitives

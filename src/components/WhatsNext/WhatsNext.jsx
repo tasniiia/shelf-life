@@ -4,6 +4,7 @@ import BookPicker from './BookPicker';
 import MatchCard from './MatchCard';
 import Button from '../ui/Button';
 import CurrentlyReadingHero from '../CurrentlyReading/CurrentlyReadingHero';
+import ReadingGoals from '../ReadingGoals/ReadingGoals';
 import { matchBooksMetadata, filterSensibleCandidates } from '../../lib/metadataMatcher';
 import { pickRandomSample } from '../../lib/csv';
 import { computeReadingVelocity } from '../../lib/metrics';
@@ -106,6 +107,7 @@ export default function WhatsNext({ library }) {
   return (
     <>
       <CurrentlyReadingHero library={library} />
+      <ReadingGoals library={library} />
       <div className="max-w-2xl mx-auto px-4 py-10 sm:py-14">
         <p className="ledger-label mb-2">What's next?</p>
         <h1 className="font-display text-3xl font-semibold tracking-tight mb-3">
