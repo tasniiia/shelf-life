@@ -105,7 +105,7 @@ so it doesn't fight with Vite's own hot reload.
 
 ## Real buy links (no scraping, no mock data)
 
-Each match in What's Next shows real purchase options:
+Each match in What's Next shows real purchase and borrowing options:
 
 - **Google Books buy link + live price**, when Google actually has the
   ebook for sale — this data is already being fetched alongside genre
@@ -113,21 +113,24 @@ Each match in What's Next shows real purchase options:
   the long-term metadata cache like genre data is, since a price can change
   at any time and that cache has no expiry — persisting it would mean
   showing a stale price forever once a book is cached.
-- **Amazon and Bookshop.org** links are always shown as a fallback — plain
-  product-search URLs, with an affiliate tag appended once you've
-  configured one (see below). Until then they're still fully functional
-  links, just without earning anything.
+- **Amazon** — always shown as a fallback, a plain product-search URL with
+  an affiliate tag appended once you've configured one (see below). Until
+  then it's still a fully functional link, just without earning anything.
+- **WorldCat ("Find at a library")** — a genuinely universal "find this
+  book at a library near you" search, always shown, never an affiliate
+  link (libraries don't pay commissions). Chosen over a Libby link
+  specifically because Libby's catalog is tied to each person's individual
+  library system with no library-agnostic search URL — a single link that
+  works identically for everyone isn't really possible there without
+  asking each user to first configure their home library.
 
 ## Monetization setup (affiliate links + Shelf Awareness summary watermark unlock)
 
 **Affiliate links:** open `src/lib/affiliateLinks.js` and fill in
-`AMAZON_ASSOCIATE_TAG` (from your Amazon Associates account) and/or
-`BOOKSHOP_AFFILIATE_ID` (from Bookshop.org). The commission disclaimer
-only appears in the UI once at least one is set — no need to touch
-anything else. Note: Bookshop.org's affiliate link format here is based on
-their publicly documented pattern but hasn't been tested against a live
-account from this environment — worth a direct check once you have a real
-affiliate ID.
+`AMAZON_ASSOCIATE_TAG` (from your Amazon Associates account). The
+commission disclaimer only appears in the UI once it's set — no need to
+touch anything else. WorldCat is intentionally excluded from this flag
+entirely, since it's never an affiliate relationship.
 
 **Shelf Awareness summary watermark unlock** is scaffolded but **not live** — it
 needs a real Stripe account, which is a business step only you can
@@ -205,7 +208,9 @@ Then open the printed local URL. On first load:
    browser with PapaParse; nothing is uploaded anywhere. The parsed
    library is then saved to `localStorage`, so refreshing the page — or
    closing and reopening the tab — doesn't require re-uploading; only
-   "Upload a different CSV" in the footer clears it.
+   "Upload a different CSV" — in the header (always visible) or the
+   footer — clears it, with a confirmation prompt first since it's
+   destructive.
 2. Use the **What's Next**, **Shelf Awareness**, or **Vocabulary Vault**
    tab. That's it — no accounts, no setup.
 

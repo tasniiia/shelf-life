@@ -57,6 +57,9 @@ export default function App() {
   }, [library]);
 
   function handleNewUpload() {
+    if (!window.confirm('Upload a different CSV? This clears your current library from this browser.')) {
+      return;
+    }
     prefetchStarted.current = false;
     setPrefetchProgress(null);
     setLibrary(null);
@@ -67,7 +70,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header view={view} onChangeView={setView} hasLibrary={!!library} />
+      <Header view={view} onChangeView={setView} hasLibrary={!!library} onNewUpload={handleNewUpload} />
 
       <main className="flex-1">
         {!library && <CsvUpload onLibraryParsed={handleLibraryParsed} />}

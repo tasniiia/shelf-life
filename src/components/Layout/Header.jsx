@@ -1,7 +1,7 @@
 import clsx from 'clsx';
-import { BookMarked } from 'lucide-react';
+import { BookMarked, Upload } from 'lucide-react';
 
-export default function Header({ view, onChangeView, hasLibrary }) {
+export default function Header({ view, onChangeView, hasLibrary, onNewUpload }) {
   return (
     <header className="border-b border-line bg-paper/95 backdrop-blur sticky top-0 z-30">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
@@ -24,7 +24,18 @@ export default function Header({ view, onChangeView, hasLibrary }) {
           </nav>
         )}
 
-        <div className="w-5" aria-hidden="true" />
+        {hasLibrary ? (
+          <button
+            onClick={onNewUpload}
+            className="flex items-center gap-1.5 text-xs font-medium text-ink/50 hover:text-ink shrink-0"
+            title="Upload a different Goodreads CSV"
+          >
+            <Upload className="w-4 h-4" />
+            <span className="hidden md:inline">New CSV</span>
+          </button>
+        ) : (
+          <div className="w-5" aria-hidden="true" />
+        )}
       </div>
 
       {hasLibrary && (
