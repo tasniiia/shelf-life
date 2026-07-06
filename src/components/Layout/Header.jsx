@@ -15,11 +15,11 @@ export default function Header({ view, onChangeView, hasLibrary, onNewUpload }) 
             <TabButton active={view === 'vibe'} onClick={() => onChangeView('vibe')}>
               What's Next?
             </TabButton>
-            <TabButton active={view === 'awareness'} onClick={() => onChangeView('awareness')}>
-              Shelf Awareness
-            </TabButton>
             <TabButton active={view === 'vocab'} onClick={() => onChangeView('vocab')}>
               Vocabulary Vault
+            </TabButton>
+            <TabButton active={view === 'awareness'} onClick={() => onChangeView('awareness')}>
+              Shelf Awareness
             </TabButton>
           </nav>
         )}
@@ -43,11 +43,11 @@ export default function Header({ view, onChangeView, hasLibrary, onNewUpload }) 
           <TabButton full active={view === 'vibe'} onClick={() => onChangeView('vibe')}>
             What's Next?
           </TabButton>
-          <TabButton full active={view === 'awareness'} onClick={() => onChangeView('awareness')}>
-            Shelf Awareness
-          </TabButton>
           <TabButton full active={view === 'vocab'} onClick={() => onChangeView('vocab')}>
             Vocabulary Vault
+          </TabButton>
+          <TabButton full active={view === 'awareness'} onClick={() => onChangeView('awareness')}>
+            Shelf Awareness
           </TabButton>
         </nav>
       )}

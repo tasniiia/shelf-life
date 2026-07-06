@@ -87,17 +87,51 @@ export async function startProCheckout() {
   window.location.href = url;
 }
 
+// --- Promo code unlock (for demoing Pro before Stripe is live) --------
+//
+// A way to unlock Pro without paying, for showing off the experience or
+// testing before a real Stripe account exists. Same honesty caveat as
+// everything above, just more directly relevant here: this code lives in
+// client-side JavaScript, so it's visible to anyone who inspects the
+// deployed bundle — this is NOT a real secret, it's a convenience phrase
+// for people you've chosen to share it with, not an access-control
+// mechanism. Fine for its actual purpose (previewing/demoing), not
+// something to treat as a locked door.
+//
+// Change this to whatever phrase you want before sharing it around.
+const PROMO_CODE = 'shelflife-preview';
+
+export function isPromoCodeValid(code) {
+  return String(code || '').trim().toLowerCase() === PROMO_CODE.toLowerCase();
+}
+
 /**
  * Call once on app load — if the person just landed back here from a
  * successful Stripe Checkout redirect (see successUrl above), this reads
  * the flag from the URL and persists the unlock locally, then cleans the
- * URL so refreshing doesn't re-trigger anything.
+ * URL so refreshing doesn't re-trigger anything. Also checks for a
+ * `?promo=` URL param, so you can share a single link (e.g.
+ * yoursite.com?promo=shelflife-preview) that unlocks Pro on load, without
+ * anyone needing to find or type anything themselves.
  */
 export function checkForCheckoutReturn() {
   const params = new URLSearchParams(window.location.search);
+  let changed = false;
+
   if (params.get('unlocked') === 'true') {
     setProUnlocked(true);
     params.delete('unlocked');
+    changed = true;
+  }
+
+  const promoParam = params.get('promo');
+  if (promoParam && isPromoCodeValid(promoParam)) {
+    setProUnlocked(true);
+    params.delete('promo');
+    changed = true;
+  }
+
+  if (changed) {
     const cleanUrl = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`;
     window.history.replaceState({}, '', cleanUrl);
   }

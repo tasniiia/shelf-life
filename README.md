@@ -205,10 +205,29 @@ complete:
 5. In `src/lib/monetization.js`, replace `STRIPE_PRICE_ID` with your real Price ID.
 
 Until all of that's done, the unlock button in the app will honestly say
-payments aren't connected yet, rather than pretending to work. In local dev
-(`npm run dev`), a "dev only" link on the unlock modal lets you flip the
-unlock flag directly to preview the unwatermarked experience without a real
-payment — it's hidden automatically in the deployed production build.
+payments aren't connected yet, rather than pretending to work.
+
+**Demoing Pro before Stripe is live:** open `src/lib/monetization.js` and
+change `PROMO_CODE` (default `shelflife-preview`) to whatever phrase you
+want. Two ways to redeem it:
+- **A shareable link** — `yoursite.com?promo=your-code` unlocks Pro
+  automatically on load, no typing required. Good for sending to early
+  testers.
+- **Manual entry** — click "Have a promo code?" on the unlock modal (the
+  same one both the locked insight cards and the summary card use) and
+  type it in directly. Good for demoing in person.
+
+Same honesty caveat as everything else Pro-related in this app, just more
+directly relevant here: this code lives in client-side JavaScript, so
+it's technically visible to anyone who inspects the deployed bundle. It's
+a convenience phrase for people you've chosen to share it with, not a real
+secret or an access-control mechanism — fine for previewing/demoing,
+not something to rely on once real payments matter.
+
+In local dev
+(`npm run dev`), there's also a "dev only" link on the unlock modal that
+flips the unlock flag directly with no code needed — it's hidden
+automatically in the deployed production build.
 
 Since there's no backend database, "unlocked" is stored as a flag in that
 browser's `localStorage` — a purchase unlocks the watermark removal on the
