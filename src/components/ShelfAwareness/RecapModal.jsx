@@ -40,9 +40,9 @@ export default function RecapModal({ heroStats, topInsights, scopeLabel, onClose
             Same honesty caveat as every other lock in this app: this is a
             soft deterrent (see lib/monetization.js), not real DRM. */}
         {!unlocked && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-ink/10">
-            <p className="font-display text-lg font-semibold text-paper mb-1 drop-shadow">Your Shelf Awareness Summary</p>
-            <p className="text-xs text-paper/80 mb-4 max-w-[220px] drop-shadow">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-ink/80">
+            <p className="font-display text-lg font-semibold text-paper mb-1">Your Shelf Awareness Summary</p>
+            <p className="text-sm text-paper/90 mb-4 max-w-[220px]">
               Unlock ShelfLife Pro to see and download your summary card, watermark-free.
             </p>
             <button
