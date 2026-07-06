@@ -64,7 +64,10 @@ export function devotedFan(read) {
   const maxCount = top5[0].count;
   const topAuthors = top5.map((a) => ({ label: a.author, count: a.count, pct: Math.round((a.count / maxCount) * 100) }));
 
-  return { author: ranked[0].author, count: ranked[0].count, topAuthors };
+  const tiedAuthors = ranked.filter((a) => a.count === maxCount).map((a) => a.author);
+  const isTie = tiedAuthors.length > 1;
+
+  return { author: ranked[0].author, count: ranked[0].count, topAuthors, isTie, tiedAuthors };
 }
 
 // 4b. The Format Loyalist — breakdown of Binding (Kindle/Paperback/Hardcover/etc).

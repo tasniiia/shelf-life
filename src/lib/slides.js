@@ -4,6 +4,17 @@
 // to reorder or extend.
 
 /**
+ * Joins a list of names naturally for prose — "A", "A & B", or
+ * "A, B & C" — used for acknowledging ties rather than silently picking
+ * one name to feature.
+ */
+function joinNames(names) {
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} & ${names[1]}`;
+  return `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`;
+}
+
+/**
  * A handful of "hero" numbers meant to be scannable in a couple of seconds,
  * before diving into the full set of detailed insight cards below them.
  */
@@ -24,14 +35,13 @@ export function buildHeroStats(metrics, library) {
 
 export function buildSlides({ metrics, library, year = 'all' }) {
   const slides = [];
-  const scopeLabel = year === 'all' ? '' : ` in ${year}`;
   const heroStats = buildHeroStats(metrics, library);
 
   slides.push({
     id: 'intro',
     kind: 'intro',
     eyebrow: year === 'all' ? 'Shelf Awareness' : `Shelf Awareness · ${year}`,
-    headline: `${library.read.length} books read${scopeLabel}.`,
+    headline: 'Your reading life, decoded.',
     body:
       year === 'all'
         ? "Here's what your shelf says about you."
@@ -125,16 +135,20 @@ export function buildSlides({ metrics, library, year = 'all' }) {
   }
 
   if (metrics.devotedFan) {
-    const { author, count, topAuthors } = metrics.devotedFan;
+    const { author, count, topAuthors, isTie, tiedAuthors } = metrics.devotedFan;
+    const headline = isTie ? `${tiedAuthors.length}-way tie` : author;
+    const body = isTie
+      ? `${joinNames(tiedAuthors)} are tied at ${count} books each — nobody's pulled ahead yet.`
+      : `Nobody else on your shelf gets this much of your time. ${author} has your loyalty.`;
     slides.push({
       id: 'devotedFan',
       kind: 'rankedBars',
       eyebrow: 'The devoted fan',
-      headline: author,
+      headline,
       stat: String(count),
       statLabel: 'books read',
       rankedBars: topAuthors,
-      body: `Nobody else on your shelf gets this much of your time. ${author} has your loyalty.`,
+      body,
     });
   }
 

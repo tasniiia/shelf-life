@@ -85,11 +85,14 @@ export default function FlipCard({ slide, index, isProUnlocked, onRequestUnlock 
                 ))}
               </div>
             ) : null}
-            {slide.kind !== 'book' && (
+            {slide.kind !== 'book' && slide.id !== 'devotedFan' && (
               <>
                 <h3 className="font-display text-lg font-semibold leading-snug">{slide.headline}</h3>
                 {slide.author && <p className="text-xs text-ink/50 mt-1">{slide.author}</p>}
               </>
+            )}
+            {slide.id === 'devotedFan' && (
+              <p className="text-xs text-ink/50 mt-1">Flip to find out who.</p>
             )}
           </div>
 
