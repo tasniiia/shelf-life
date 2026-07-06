@@ -13,7 +13,7 @@ export default function Header({ view, onChangeView, hasLibrary, onNewUpload }) 
         {hasLibrary && (
           <nav className="hidden sm:flex items-center gap-1 bg-card border border-line rounded-full p-1">
             <TabButton active={view === 'vibe'} onClick={() => onChangeView('vibe')}>
-              What's Next?
+              Home
             </TabButton>
             <TabButton active={view === 'vocab'} onClick={() => onChangeView('vocab')}>
               Vocabulary Vault
@@ -41,7 +41,7 @@ export default function Header({ view, onChangeView, hasLibrary, onNewUpload }) 
       {hasLibrary && (
         <nav className="sm:hidden flex border-t border-line items-stretch">
           <TabButton full active={view === 'vibe'} onClick={() => onChangeView('vibe')}>
-            What's Next?
+            Home
           </TabButton>
           <TabButton full active={view === 'vocab'} onClick={() => onChangeView('vocab')}>
             Vocabulary Vault

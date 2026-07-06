@@ -75,7 +75,7 @@ export default function App() {
       <main className="flex-1">
         {!library && <CsvUpload onLibraryParsed={handleLibraryParsed} />}
 
-        {library && view === 'vibe' && <WhatsNext library={library} />}
+        {library && view === 'vibe' && <WhatsNext library={library} onNavigate={setView} />}
 
         {library && view === 'awareness' && <ShelfAwareness library={library} />}
 

@@ -76,6 +76,14 @@ export default function FlipCard({ slide, index, isProUnlocked, onRequestUnlock 
                 <h3 className="font-display text-lg font-semibold leading-snug">The Longest Wait</h3>
                 <p className="text-xs text-ink/50 mt-1">Flip to find out which book.</p>
               </div>
+            ) : slide.kind === 'pageBars' ? (
+              <div className="mb-2 space-y-2">
+                {slide.pageBars.map((b, i) => (
+                  <div key={i} className="h-2.5 bg-line rounded-full overflow-hidden">
+                    <div className="h-full bg-stamp rounded-full" style={{ width: `${b.pct}%` }} />
+                  </div>
+                ))}
+              </div>
             ) : null}
             {slide.kind !== 'book' && (
               <>

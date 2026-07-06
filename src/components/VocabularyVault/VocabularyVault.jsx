@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, Plus, Download, BookOpen } from 'lucide-react';
+import { Loader2, Plus, Download, BookOpen, Layers } from 'lucide-react';
 import Button from '../ui/Button';
 import BookAutocomplete from './BookAutocomplete';
 import VocabEntryCard from './VocabEntryCard';
+import FlashcardMode from './FlashcardMode';
 import { addVocabEntry, getAllVocabEntries, deleteVocabEntry } from '../../lib/vocabularyDb';
 import {
   fetchWordDefinition,
@@ -18,6 +19,7 @@ export default function VocabularyVault({ library }) {
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [word, setWord] = useState('');
+  const [flashcardsOpen, setFlashcardsOpen] = useState(false);
   const [sourceBook, setSourceBook] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -91,6 +93,7 @@ export default function VocabularyVault({ library }) {
   }
 
   return (
+    <>
     <div className="max-w-4xl mx-auto px-4 py-10 sm:py-14">
       <p className="ledger-label mb-2">Vocabulary Vault</p>
       <h1 className="font-display text-3xl font-semibold tracking-tight mb-3">Words worth keeping.</h1>
@@ -141,6 +144,12 @@ export default function VocabularyVault({ library }) {
         </p>
         {entries.length > 0 && (
           <div className="flex gap-3">
+            <button
+              onClick={() => setFlashcardsOpen(true)}
+              className="flex items-center gap-1.5 text-xs text-ink/60 hover:text-ink underline underline-offset-2"
+            >
+              <Layers className="w-3.5 h-3.5" /> Flashcard Mode
+            </button>
             <button
               onClick={() => handleExport('json')}
               className="flex items-center gap-1.5 text-xs text-ink/60 hover:text-ink underline underline-offset-2"
@@ -204,5 +213,8 @@ export default function VocabularyVault({ library }) {
         </div>
       )}
     </div>
+
+    {flashcardsOpen && <FlashcardMode entries={entries} onClose={() => setFlashcardsOpen(false)} />}
+    </>
   );
 }

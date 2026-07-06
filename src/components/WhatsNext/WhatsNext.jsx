@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2, Search, ArrowRight } from 'lucide-react';
 import BookPicker from './BookPicker';
 import MatchCard from './MatchCard';
 import Button from '../ui/Button';
@@ -18,7 +18,7 @@ const TIME_FILTERS = [
   { id: 'quickWin', label: 'Quick win (shortest first)' },
 ];
 
-export default function WhatsNext({ library }) {
+export default function WhatsNext({ library, onNavigate }) {
   const [finishedIdx, setFinishedIdx] = useState('');
   const [direction, setDirection] = useState('similar');
   const [timeFilter, setTimeFilter] = useState('none');
@@ -185,6 +185,31 @@ export default function WhatsNext({ library }) {
           ))}
         </div>
       )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-12 pt-8 border-t border-line">
+        <button
+          onClick={() => onNavigate('awareness')}
+          className="catalog-card p-5 text-left hover:border-stamp transition-colors flex items-center justify-between gap-3"
+        >
+          <div>
+            <p className="ledger-label mb-1">Explore</p>
+            <p className="font-display text-lg font-semibold">Shelf Awareness</p>
+            <p className="text-sm text-ink/60 mt-1">See what your reading habits actually say about you.</p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-ink/30 shrink-0" />
+        </button>
+        <button
+          onClick={() => onNavigate('vocab')}
+          className="catalog-card p-5 text-left hover:border-stamp transition-colors flex items-center justify-between gap-3"
+        >
+          <div>
+            <p className="ledger-label mb-1">Explore</p>
+            <p className="font-display text-lg font-semibold">Vocabulary Vault</p>
+            <p className="text-sm text-ink/60 mt-1">Log words you ran into while reading.</p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-ink/30 shrink-0" />
+        </button>
+      </div>
       </div>
     </>
   );

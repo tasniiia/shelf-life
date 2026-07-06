@@ -419,19 +419,25 @@ export function backlogClearTime(toRead, readingVelocity) {
   };
 }
 
-// 15. TBR Declutter List — the books that have been sitting the longest,
-// as a nudge to either finally read them or let them go.
-export function tbrDeclutterList(toRead, count = 3) {
+// 15. Backlog Average Age — the average age across your ENTIRE to-read
+// shelf, as a persona. Deliberately a distribution/aggregate framing
+// rather than another "here's your single oldest book" callout — that
+// slot used to be TBR Declutter List, which felt redundant against the
+// To-Read Graveyard card telling essentially the same "oldest book" story
+// a second way.
+export function backlogAverageAge(toRead) {
   const withDates = toRead.filter((b) => b.dateAdded);
-  if (!withDates.length) return null;
+  if (withDates.length < 5) return null; // an "average" needs a real sample to mean anything
+
   const now = new Date();
-  return [...withDates]
-    .sort((a, b) => a.dateAdded - b.dateAdded)
-    .slice(0, count)
-    .map((book) => {
-      const daysWaiting = daysBetween(book.dateAdded, now);
-      return { book, yearsWaiting: Number((daysWaiting / 365).toFixed(1)) };
-    });
+  const avgDays = withDates.reduce((sum, b) => sum + daysBetween(b.dateAdded, now), 0) / withDates.length;
+  const avgYears = Number((avgDays / 365).toFixed(1));
+
+  let persona = 'The Patient Reader';
+  if (avgYears < 0.5) persona = 'Fresh Off the Shelf';
+  else if (avgYears > 1.5) persona = 'The Eternal Procrastinator';
+
+  return { avgDays: Math.round(avgDays), avgYears, count: withDates.length, persona };
 }
 
 // 16. Backlog Trend — is your to-read shelf growing faster than you're
@@ -470,7 +476,7 @@ export function computeAllMetrics(library) {
     biggestTimeJump: biggestTimeJump(read),
     totalPages: totalPagesRead(read),
     backlogClear: backlogClearTime(toRead, readingVelocity),
-    tbrDeclutter: tbrDeclutterList(toRead, 3),
+    backlogAverageAge: backlogAverageAge(toRead),
     backlogTrend: backlogTrend(read, toRead),
   };
 }

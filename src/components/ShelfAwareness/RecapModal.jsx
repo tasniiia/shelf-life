@@ -1,15 +1,38 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
-import { X, Download, Sparkles } from 'lucide-react';
+import { X, Download, Sparkles, Settings2 } from 'lucide-react';
 import RecapCard from './RecapCard';
 import UnlockModal from './UnlockModal';
+import CustomizeSummaryModal from './CustomizeSummaryModal';
 import { useProUnlocked } from '../../hooks/useProUnlocked';
+import { resolveSummaryInsights } from '../../lib/slides';
+import { getCustomSummarySelection, setCustomSummarySelection } from '../../lib/summaryCustomization';
 
-export default function RecapModal({ heroStats, topInsights, scopeLabel, onClose }) {
+export default function RecapModal({ heroStats, shareableSlides, scopeLabel, onClose }) {
   const cardRef = useRef(null);
   const unlocked = useProUnlocked();
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [customSelection, setCustomSelectionState] = useState(getCustomSummarySelection());
   const [error, setError] = useState(null);
+
+  // Custom selection is Pro-only, per the request — a free user's
+  // localStorage could theoretically still hold a stale selection from a
+  // Pro session, so this only actually applies it when currently unlocked.
+  const topInsights = useMemo(
+    () => resolveSummaryInsights(shareableSlides, unlocked ? customSelection : null, 3),
+    [shareableSlides, customSelection, unlocked]
+  );
+
+  const availableForCustomize = useMemo(
+    () => shareableSlides.filter((s) => s.id !== 'intro' && s.id !== 'outro'),
+    [shareableSlides]
+  );
+
+  function handleSaveCustomSelection(ids) {
+    setCustomSelectionState(ids.length ? ids : null);
+    setCustomSummarySelection(ids);
+  }
 
   async function handleDownload() {
     if (!unlocked || !cardRef.current) return; // Pro-only — see the blurred overlay below for everyone else
@@ -57,20 +80,38 @@ export default function RecapModal({ heroStats, topInsights, scopeLabel, onClose
 
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
         {error && <p className="text-sm text-stamp bg-paper/90 px-3 py-1 rounded-full">{error}</p>}
-        {unlocked && (
-          <button
-            onClick={handleDownload}
-            className="flex items-center gap-2 text-sm text-paper/90 hover:text-paper bg-paper/10 px-4 py-2 rounded-full"
-          >
-            <Download className="w-4 h-4" /> Download
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {unlocked && (
+            <>
+              <button
+                onClick={handleDownload}
+                className="flex items-center gap-2 text-sm text-paper/90 hover:text-paper bg-paper/10 px-4 py-2 rounded-full"
+              >
+                <Download className="w-4 h-4" /> Download
+              </button>
+              <button
+                onClick={() => setCustomizeOpen(true)}
+                className="flex items-center gap-2 text-sm text-paper/90 hover:text-paper bg-paper/10 px-4 py-2 rounded-full"
+              >
+                <Settings2 className="w-4 h-4" /> Customize
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       <UnlockModal
         open={unlockModalOpen}
         onClose={() => setUnlockModalOpen(false)}
         onUnlocked={() => setUnlockModalOpen(false)}
+      />
+
+      <CustomizeSummaryModal
+        open={customizeOpen}
+        onClose={() => setCustomizeOpen(false)}
+        availableSlides={availableForCustomize}
+        initialSelection={customSelection || []}
+        onSave={handleSaveCustomSelection}
       />
     </div>
   );

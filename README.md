@@ -5,7 +5,9 @@ no database, no accounts — everything runs client-side in your browser.
 
 Three features:
 
-1. **What's Next** — sits below a **Currently Reading hero widget** (cover
+1. **Home** (tab label — renamed from "What's Next?" once this page grew to
+   contain Currently Reading and Reading Goals too, not just the matcher)
+   — sits below a **Currently Reading hero widget** (cover
    art cards for anything on your currently-reading shelf, newest addition
    first, hidden entirely if that shelf is empty — labeled "On your shelf
    for X days" rather than "started X days ago," since Goodreads' CSV has
@@ -13,7 +15,7 @@ Three features:
    it was first added to your account on any shelf; shares the same
    three-tier cover fallback described below. Each card also shows a
    Goodreads link and an "at your pace" estimated read time using the same
-   reading-velocity math as What's Next — an estimate for the whole book,
+   reading-velocity math as the matcher below — an estimate for the whole book,
    not "time remaining," since Goodreads doesn't track how far into a book
    you actually are. On mobile, when there's more than one book, each card
    is slightly narrower than the full screen so the next one visibly peeks
@@ -26,6 +28,10 @@ Three features:
      its own small IndexedDB store, separate from the library itself, so
      it survives re-uploading a fresh CSV mid-book the same way
      Vocabulary Vault and Goals do.
+   - At the bottom of this page, two navigation cards link out to Shelf
+     Awareness and Vocabulary Vault — since this page is now the app's
+     landing page, these exist so exploring the other two sections doesn't
+     depend on noticing the header tabs.
 
    Below that: pick the
    book you just finished, and get 3 ranked
@@ -93,17 +99,25 @@ Three features:
    from your CSV. Opens with a **hero stats row** (total books, pages read,
    average rating, finish rate) before diving into 17 detailed insight
    cards: finish rate, your shortest vs. longest read as a pair with a
-   proportional bar comparing their page counts ("The Bookends"), the
+   proportional bar comparing their page counts ("The Bookends" — the bars
+   themselves preview on the front of the card too now, not just on the
+   flip side, so the front doesn't look bare next to cards that have a
+   bold stat or headline as their visual anchor), the
    single biggest
    publication-year jump between two back-to-back reads, favorite author,
    format preference, early-adopter vs. archive-digger tendency, seasonal
    reading rhythm (with a "Winter Hibernator"/"Summer Sprinter" persona),
    your own rating distribution, whether long books actually earn higher
    ratings from you, page-count mix, series commitment, review-writing
-   habits, your oldest unread book (title withheld on the front of the
-   card — flip to actually reveal it), **backlog clear time** (how long your
-   whole to-read shelf would take at your actual reading pace), a **TBR
-   declutter list** (the 3 books that have waited longest), and whether
+   habits, your oldest unread book (title withheld until you flip the card
+   on desktop or tap it on mobile — both platforms match now), **backlog
+   clear time** (how long your
+   whole to-read shelf would take at your actual reading pace), your
+   **backlog's average age** across every to-read book, as a persona (a
+   distribution statistic, deliberately not another "here's your single
+   oldest book" callout — that slot used to be a TBR Declutter List, which
+   felt redundant against the To-Read Graveyard card telling essentially
+   the same story a second way), and whether
    your backlog is growing or shrinking over the past year. Choose **All
    Time** or any year you've actually finished a book in for an **Annual
    Recap** scoped to just that year.
@@ -122,17 +136,22 @@ Three features:
      button on the pre-generate screen serves someone who hasn't browsed
      the deck at all, while this one is the natural conclusion after
      having browsed everything.
-   - **Share My Shelf Awareness Summary** composites your hero stats + the 3 most
-     notable insights (ranked by how far each number sits from a "boring
-     middle") into one single shareable image with a short description per
+   - **Share My Shelf Awareness Summary** composites your hero stats + 3
+     insights into one single shareable image with a short description per
      insight — a highlight reel, not the full 19-card deck. This summary
      card is a **ShelfLife Pro** perk: free users see a blurred preview
      with an unlock prompt and can't download it; Pro users see it clearly,
-     watermark-free, and can download it.
+     watermark-free, and can download it. Pro users can also **customize
+     which 3 insights appear** — a "Customize" button opens a picker of
+     every unlocked card; pick up to 3, or leave none checked to keep the
+     automatic notability-based selection. Falls back gracefully to the
+     automatic pick if a saved selection ever references a card that's
+     since been renamed or retired (like the TBR Declutter List above),
+     so a metric change never leaves anyone with a broken summary.
    - **10 cards** (Weekend Warrior/Steady Reader pace persona, Seasonal
      Velocity, The Fair Grader, Length vs. Rating, Literary Diet, The
-     Documentarian, To-Read Graveyard, Backlog Clear Time, TBR Declutter
-     List, Backlog Trend) are locked behind ShelfLife Pro, a single $2.99
+     Documentarian, To-Read Graveyard, Backlog Clear Time, Backlog Average
+     Age, Backlog Trend) are locked behind ShelfLife Pro, a single $2.99
      one-time unlock — the first 8 cards plus the closing card stay free.
      Locked cards show a blurred preview immediately rather than requiring
      a flip to discover they're locked — see the honesty note in
@@ -168,6 +187,11 @@ Three features:
      the ones that got a 404 from the dictionary lookup and need you to
      define them yourself, previously buried among everything else with no
      way to find just those.
+   - **Flashcard Mode** shuffles your words (only ones with an actual
+     definition — nothing to quiz yourself on for a blank one) into a
+     one-at-a-time review: tap to reveal the definition, part of speech,
+     and source book, then step through with Previous/Next or reshuffle
+     entirely.
    - Storage is IndexedDB, not `localStorage` — better suited to a
      collection that can grow into hundreds of entries with real structure,
      and it's asynchronous rather than blocking. Implemented as a small
@@ -324,7 +348,7 @@ Then open the printed local URL. On first load:
    "Upload a different CSV" — in the header (always visible) or the
    footer — clears it, with a confirmation prompt first since it's
    destructive.
-2. Use the **What's Next**, **Shelf Awareness**, or **Vocabulary Vault**
+2. Use the **Home**, **Shelf Awareness**, or **Vocabulary Vault**
    tab. That's it — no accounts, no setup.
 
 ## Project structure

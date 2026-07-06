@@ -8,7 +8,7 @@ import ShelfAwarenessGrid from './ShelfAwarenessGrid';
 import RecapModal from './RecapModal';
 import UnlockModal from './UnlockModal';
 import { computeAllMetrics, getAvailableYears, filterLibraryByYear } from '../../lib/metrics';
-import { buildSlides, buildHeroStats, pickTopInsights } from '../../lib/slides';
+import { buildSlides, buildHeroStats } from '../../lib/slides';
 import { useProUnlocked } from '../../hooks/useProUnlocked';
 import { getAllVocabEntries } from '../../lib/vocabularyDb';
 import { computeScrabblePower, computeLinguisticEra, buildVocabInsightSlides } from '../../lib/vocabularyInsights';
@@ -69,7 +69,6 @@ export default function ShelfAwareness({ library }) {
     () => slides.filter((s) => !s.locked || proUnlocked),
     [slides, proUnlocked]
   );
-  const topInsights = useMemo(() => pickTopInsights(shareableSlides, 3), [shareableSlides]);
 
   const [error, setError] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -179,7 +178,7 @@ export default function ShelfAwareness({ library }) {
         {recapOpen && (
           <RecapModal
             heroStats={heroStats}
-            topInsights={topInsights}
+            shareableSlides={shareableSlides}
             scopeLabel={scope === 'all' ? 'All Time' : `${scope} Recap`}
             onClose={() => setRecapOpen(false)}
           />
@@ -293,7 +292,7 @@ export default function ShelfAwareness({ library }) {
       {recapOpen && (
         <RecapModal
           heroStats={heroStats}
-          topInsights={topInsights}
+          shareableSlides={shareableSlides}
           scopeLabel={scope === 'all' ? 'All Time' : `${scope} Recap`}
           onClose={() => setRecapOpen(false)}
         />

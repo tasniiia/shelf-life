@@ -332,19 +332,23 @@ export function buildSlides({ metrics, library, year = 'all' }) {
     });
   }
 
-  if (metrics.tbrDeclutter?.length) {
+  if (metrics.backlogAverageAge) {
+    const { avgYears, avgDays, count, persona } = metrics.backlogAverageAge;
     slides.push({
-      id: 'tbrDeclutter',
+      id: 'backlogAverageAge',
       locked: true, // ShelfLife Pro bonus card
-      kind: 'bookList',
-      eyebrow: 'TBR declutter list',
-      headline: 'Time to decide',
-      bookList: metrics.tbrDeclutter.map((d) => ({
-        title: d.book.title,
-        author: d.book.author,
-        sublabel: `waiting ${d.yearsWaiting} year${d.yearsWaiting === 1 ? '' : 's'}`,
-      })),
-      body: "These have been sitting the longest. Finally read them, or let them go — either beats letting them haunt the list.",
+      kind: 'stat',
+      eyebrow: 'Backlog average age',
+      headline: persona,
+      stat: `${avgYears}y`,
+      statLabel: `average age across ${count} to-read books`,
+      body: `The average book on your to-read shelf has been waiting ${avgDays} days — about ${avgYears} years. ${
+        persona === 'The Eternal Procrastinator'
+          ? "It's not a race, but it might be time to actually start some of these."
+          : persona === 'Fresh Off the Shelf'
+          ? "You're adding books faster than they can age — a shelf in constant motion."
+          : "A healthy middle ground between impulse and neglect."
+      }`,
     });
   }
 
@@ -402,7 +406,7 @@ export function buildSlides({ metrics, library, year = 'all' }) {
     documentarian: () => (metrics.documentarian ? clamp01(Math.abs(metrics.documentarian.pct - 30) / 70) : 0),
     graveyard: () => (metrics.graveyard ? clamp01(0.5 + metrics.graveyard.yearsWaiting / 10) : 0),
     backlogClear: () => (metrics.backlogClear ? clamp01(metrics.backlogClear.years / 10) : 0),
-    tbrDeclutter: () => (metrics.tbrDeclutter?.length ? 0.5 : 0),
+    backlogAverageAge: () => (metrics.backlogAverageAge ? clamp01(metrics.backlogAverageAge.avgYears / 3) : 0),
     backlogTrend: () => (metrics.backlogTrend ? clamp01(Math.abs(metrics.backlogTrend.net) / 30) : 0),
   };
   slides.forEach((s) => {
@@ -420,4 +424,22 @@ export function buildSlides({ metrics, library, year = 'all' }) {
 export function pickTopInsights(slides, count = 4) {
   const content = slides.filter((s) => s.id !== 'intro' && s.id !== 'outro');
   return [...content].sort((a, b) => (b.notability ?? 0) - (a.notability ?? 0)).slice(0, count);
+}
+
+/**
+ * Pro feature: lets someone choose exactly which cards surface in their
+ * summary instead of relying on automatic notability-based selection.
+ * Falls back to automatic selection if there's no custom selection, or if
+ * every ID in it fails to resolve — which matters concretely, not just in
+ * theory: if a metric is ever renamed or retired (TBR Declutter List
+ * became Backlog Average Age, for instance), anyone who'd customized
+ * their summary around the old card shouldn't end up with a broken or
+ * empty one.
+ */
+export function resolveSummaryInsights(slides, customSelection, count = 3) {
+  if (customSelection && customSelection.length) {
+    const resolved = customSelection.map((id) => slides.find((s) => s.id === id)).filter(Boolean);
+    if (resolved.length) return resolved;
+  }
+  return pickTopInsights(slides, count);
 }
