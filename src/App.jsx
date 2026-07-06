@@ -7,9 +7,10 @@ import VocabularyVault from './components/VocabularyVault/VocabularyVault';
 import { prefetchLibraryMetadata, clearMetadataCache } from './lib/bookMetadata';
 import { filterSensibleCandidates } from './lib/metadataMatcher';
 import { checkForCheckoutReturn } from './lib/monetization';
+import { saveLibraryToStorage, loadLibraryFromStorage, clearStoredLibrary } from './lib/libraryStorage';
 
 export default function App() {
-  const [library, setLibrary] = useState(null);
+  const [library, setLibrary] = useState(() => loadLibraryFromStorage());
   const [view, setView] = useState('vibe');
   const [prefetchProgress, setPrefetchProgress] = useState(null); // { done, total } | null
   const prefetchStarted = useRef(false);
@@ -17,6 +18,13 @@ export default function App() {
   useEffect(() => {
     checkForCheckoutReturn();
   }, []);
+
+  function handleLibraryParsed(parsedLibrary) {
+    setLibrary(parsedLibrary);
+    if (!saveLibraryToStorage(parsedLibrary)) {
+      console.warn('[ShelfLife] Library could not be saved — it will need to be re-uploaded after a refresh.');
+    }
+  }
 
   useEffect(() => {
     if (!library || prefetchStarted.current) return;
@@ -52,6 +60,7 @@ export default function App() {
     prefetchStarted.current = false;
     setPrefetchProgress(null);
     setLibrary(null);
+    clearStoredLibrary();
   }
 
   const isPrefetching = prefetchProgress && prefetchProgress.done < prefetchProgress.total;
@@ -61,7 +70,7 @@ export default function App() {
       <Header view={view} onChangeView={setView} hasLibrary={!!library} />
 
       <main className="flex-1">
-        {!library && <CsvUpload onLibraryParsed={setLibrary} />}
+        {!library && <CsvUpload onLibraryParsed={handleLibraryParsed} />}
 
         {library && view === 'vibe' && <WhatsNext library={library} />}
 
@@ -80,7 +89,8 @@ export default function App() {
             </p>
           )}
           <p>
-            Your library never leaves this browser tab.{' '}
+            Your library never leaves this browser tab, and is saved here automatically — no need to
+            re-upload after a refresh.{' '}
             <button onClick={handleNewUpload} className="underline underline-offset-2 hover:text-ink/60">
               Upload a different CSV
             </button>

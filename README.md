@@ -202,7 +202,10 @@ Then open the printed local URL. On first load:
 
 1. **Upload your Goodreads CSV.** Goodreads → Account Settings →
    Import/Export → Export Library. The file is parsed entirely in your
-   browser with PapaParse; nothing is uploaded anywhere.
+   browser with PapaParse; nothing is uploaded anywhere. The parsed
+   library is then saved to `localStorage`, so refreshing the page — or
+   closing and reopening the tab — doesn't require re-uploading; only
+   "Upload a different CSV" in the footer clears it.
 2. Use the **What's Next**, **Shelf Awareness**, or **Vocabulary Vault**
    tab. That's it — no accounts, no setup.
 
