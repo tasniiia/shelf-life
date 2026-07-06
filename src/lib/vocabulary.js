@@ -118,6 +118,8 @@ export function exportVocabularyToCsv(entries) {
   return [headers.join(','), ...rows].join('\n');
 }
 
+import { scrabbleScoreForWord } from './vocabularyInsights';
+
 export function downloadTextFile(filename, content, mimeType) {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
@@ -126,4 +128,33 @@ export function downloadTextFile(filename, content, mimeType) {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+/**
+ * Three sort orders for the vault dashboard: 'recent' (default, matches
+ * the order words were actually added), 'alphabetical', and 'scrabble' —
+ * reuses the same scoring already built for the Scrabble Power card, so
+ * "most impressive word first" is free to add here.
+ */
+export function sortVocabEntries(entries, sortBy) {
+  const sorted = [...entries];
+  if (sortBy === 'alphabetical') {
+    sorted.sort((a, b) => a.word.localeCompare(b.word));
+  } else if (sortBy === 'scrabble') {
+    sorted.sort((a, b) => scrabbleScoreForWord(b.word) - scrabbleScoreForWord(a.word));
+  } else {
+    sorted.sort((a, b) => new Date(b.dateLearned) - new Date(a.dateLearned));
+  }
+  return sorted;
+}
+
+/**
+ * Surfaces words that got a 404 from the dictionary lookup and still have
+ * a blank definition — the ones the spec always intended someone to
+ * eventually define themselves, but with no way to find just those before
+ * now, they'd have been buried among everything else.
+ */
+export function filterVocabEntries(entries, { missingDefinitionOnly }) {
+  if (!missingDefinitionOnly) return entries;
+  return entries.filter((e) => !e.definition);
 }

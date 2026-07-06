@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Loader2, Plus, Download, BookOpen } from 'lucide-react';
 import Button from '../ui/Button';
 import BookAutocomplete from './BookAutocomplete';
@@ -10,6 +10,8 @@ import {
   exportVocabularyToJson,
   exportVocabularyToCsv,
   downloadTextFile,
+  sortVocabEntries,
+  filterVocabEntries,
 } from '../../lib/vocabulary';
 
 export default function VocabularyVault({ library }) {
@@ -19,14 +21,15 @@ export default function VocabularyVault({ library }) {
   const [sourceBook, setSourceBook] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [sortBy, setSortBy] = useState('recent');
+  const [missingDefinitionOnly, setMissingDefinitionOnly] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     getAllVocabEntries()
       .then((loaded) => {
         if (cancelled) return;
-        const sorted = [...loaded].sort((a, b) => new Date(b.dateLearned) - new Date(a.dateLearned));
-        setEntries(sorted);
+        setEntries(loaded);
       })
       .catch((err) => {
         console.warn('[ShelfLife] Could not load vocabulary entries:', err.message || err);
@@ -38,6 +41,11 @@ export default function VocabularyVault({ library }) {
       cancelled = true;
     };
   }, []);
+
+  const displayedEntries = useMemo(
+    () => sortVocabEntries(filterVocabEntries(entries, { missingDefinitionOnly }), sortBy),
+    [entries, sortBy, missingDefinitionOnly]
+  );
 
   async function handleAdd(e) {
     e.preventDefault();
@@ -127,9 +135,9 @@ export default function VocabularyVault({ library }) {
         </Button>
       </form>
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <p className="ledger-label">
-          {entries.length} word{entries.length === 1 ? '' : 's'} saved
+          {displayedEntries.length} of {entries.length} word{entries.length === 1 ? '' : 's'}
         </p>
         {entries.length > 0 && (
           <div className="flex gap-3">
@@ -149,6 +157,32 @@ export default function VocabularyVault({ library }) {
         )}
       </div>
 
+      {entries.length > 0 && (
+        <div className="flex flex-wrap items-center gap-4 mb-5 text-sm">
+          <label className="flex items-center gap-2">
+            <span className="text-ink/60">Sort</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="border border-line rounded-sm px-2 py-1.5 text-sm bg-card"
+            >
+              <option value="recent">Recently added</option>
+              <option value="alphabetical">Alphabetical (A–Z)</option>
+              <option value="scrabble">Scrabble value (high to low)</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-ink/60">
+            <input
+              type="checkbox"
+              checked={missingDefinitionOnly}
+              onChange={(e) => setMissingDefinitionOnly(e.target.checked)}
+              className="rounded-sm"
+            />
+            Missing a definition only
+          </label>
+        </div>
+      )}
+
       {isLoading ? (
         <p className="text-sm text-ink/50">Loading your vault…</p>
       ) : entries.length === 0 ? (
@@ -158,9 +192,13 @@ export default function VocabularyVault({ library }) {
             No words yet — add one above next time you run into something worth remembering.
           </p>
         </div>
+      ) : displayedEntries.length === 0 ? (
+        <div className="catalog-card p-10 text-center">
+          <p className="text-sm text-ink/60">No words match that filter.</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {entries.map((entry) => (
+          {displayedEntries.map((entry) => (
             <VocabEntryCard key={entry.id} entry={entry} onDelete={handleDelete} />
           ))}
         </div>

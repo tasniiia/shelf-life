@@ -101,8 +101,15 @@ Three features:
    real Date Read carries over as the entry's timeline anchor instead of
    today's date. A 404 (common for invented fantasy/sci-fi words) doesn't
    block the save — the word is kept with blank definition fields you can
-   fill in yourself. Fully free, no Pro gate. Export your whole vault as
+   fill in yourself. Fully free, no Pro gate. Export your whole vault (not
+   just whatever's currently sorted/filtered — always everything) as
    JSON or CSV at any time.
+   - **Sort** by recently added (default), alphabetical, or Scrabble
+     value high-to-low (reuses the same tile-value scoring as the Scrabble
+     Power Pro card). **Filter** to just words still missing a definition —
+     the ones that got a 404 from the dictionary lookup and need you to
+     define them yourself, previously buried among everything else with no
+     way to find just those.
    - Storage is IndexedDB, not `localStorage` — better suited to a
      collection that can grow into hundreds of entries with real structure,
      and it's asynchronous rather than blocking. Implemented as a small
