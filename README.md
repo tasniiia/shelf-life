@@ -3,9 +3,15 @@
 A mood-based reading companion built from your Goodreads export. No backend,
 no database, no accounts — everything runs client-side in your browser.
 
-Two features:
+Three features:
 
-1. **What's Next** — pick the book you just finished, and get 3 ranked
+1. **What's Next** — sits below a **Currently Reading hero widget** (cover
+   art cards for anything on your currently-reading shelf, newest addition
+   first, hidden entirely if that shelf is empty — labeled "On your shelf
+   for X days" rather than "started X days ago," since Goodreads' CSV has
+   no field for when a book actually moved to currently-reading, only when
+   it was first added to your account on any shelf). Below that: pick the
+   book you just finished, and get 3 ranked
    matches from your own "To Read" shelf, complete with cover art (Open
    Library's ISBN-guess cover first, falling back to Google Books' thumbnail
    — already fetched alongside genre data — if Open Library doesn't have

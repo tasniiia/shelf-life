@@ -3,6 +3,7 @@ import { Loader2, Search } from 'lucide-react';
 import BookPicker from './BookPicker';
 import MatchCard from './MatchCard';
 import Button from '../ui/Button';
+import CurrentlyReadingHero from '../CurrentlyReading/CurrentlyReadingHero';
 import { matchBooksMetadata, filterSensibleCandidates } from '../../lib/metadataMatcher';
 import { pickRandomSample } from '../../lib/csv';
 import { computeReadingVelocity } from '../../lib/metrics';
@@ -103,16 +104,18 @@ export default function WhatsNext({ library }) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10 sm:py-14">
-      <p className="ledger-label mb-2">What's next?</p>
-      <h1 className="font-display text-3xl font-semibold tracking-tight mb-3">
-        Find your next read.
-      </h1>
-      <p className="text-ink/70 mb-6 leading-relaxed">
-        Tell us what you just finished and whether you want more of the same
-        or a total change of pace — we'll look up real genre tags and rank
-        your to-read shelf against it.
-      </p>
+    <>
+      <CurrentlyReadingHero library={library} />
+      <div className="max-w-2xl mx-auto px-4 py-10 sm:py-14">
+        <p className="ledger-label mb-2">What's next?</p>
+        <h1 className="font-display text-3xl font-semibold tracking-tight mb-3">
+          Find your next read.
+        </h1>
+        <p className="text-ink/70 mb-6 leading-relaxed">
+          Tell us what you just finished and whether you want more of the same
+          or a total change of pace — we'll look up real genre tags and rank
+          your to-read shelf against it.
+        </p>
 
       <div className="catalog-card p-6 space-y-6 mb-8">
         <BookPicker books={finishedPool} value={finishedIdx} onChange={setFinishedIdx} />
@@ -180,7 +183,8 @@ export default function WhatsNext({ library }) {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 

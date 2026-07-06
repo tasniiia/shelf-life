@@ -515,10 +515,10 @@ function getCacheKeyForBook(book) {
  * placeholder graphic, so the caller can detect "no cover" via the image's
  * onError handler and show its own fallback instead.
  */
-export function coverUrlForBook(book) {
+export function coverUrlForBook(book, size = 'M') {
   const isbn = String(book.isbn ?? '').replace(/["=]/g, '').trim();
   if (!isbn) return null;
-  return `https://covers.openlibrary.org/b/isbn/${encodeURIComponent(isbn)}-M.jpg?default=false`;
+  return `https://covers.openlibrary.org/b/isbn/${encodeURIComponent(isbn)}-${size}.jpg?default=false`;
 }
 
 export function isBookCached(book) {

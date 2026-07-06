@@ -36,7 +36,7 @@ export default function Header({ view, onChangeView, hasLibrary }) {
             Shelf Awareness
           </TabButton>
           <TabButton full active={view === 'vocab'} onClick={() => onChangeView('vocab')}>
-            Vocabulary
+            Vocab
           </TabButton>
         </nav>
       )}
