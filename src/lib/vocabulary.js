@@ -80,7 +80,11 @@ export function inheritedReadDateForBook(book) {
 
 /**
  * Builds a complete VocabularyEntry from user input + a fetched
- * definition + an optional source book.
+ * definition + an optional source book. sourceBooks is an array, not a
+ * single book — a word can be tagged from more than one book over time
+ * (see findDuplicateEntry/addSourceBookToEntry below), so even a
+ * brand-new entry starts with an array, just one item long (or empty for
+ * an untracked word).
  */
 export function buildVocabEntry({ word, definitionResult, sourceBook }) {
   const isTracked = sourceBook && sourceBook.id !== null;
@@ -90,12 +94,78 @@ export function buildVocabEntry({ word, definitionResult, sourceBook }) {
     definition: definitionResult.definition,
     partOfSpeech: definitionResult.partOfSpeech,
     phonetic: definitionResult.phonetic,
-    sourceBookId: isTracked ? sourceBook.isbn || sourceBook.title : null,
-    sourceBookTitle: isTracked ? sourceBook.title : 'Untracked',
-    sourceBookAuthor: isTracked ? sourceBook.author : null,
+    sourceBooks: isTracked
+      ? [
+          {
+            title: sourceBook.title,
+            author: sourceBook.author,
+            isbn: sourceBook.isbn || sourceBook.title,
+            inheritedReadDate: inheritedReadDateForBook(sourceBook),
+          },
+        ]
+      : [],
     dateLearned: new Date().toISOString(),
-    inheritedReadDate: isTracked ? inheritedReadDateForBook(sourceBook) : null,
   };
+}
+
+/**
+ * Backward-compatible read: any entry saved before sourceBooks existed
+ * had singular sourceBookTitle/sourceBookAuthor/sourceBookId/
+ * inheritedReadDate fields instead. Wraps those into the new array shape
+ * on the way in, rather than requiring a one-time migration script —
+ * existing entries just get normalized the first time they're loaded.
+ */
+export function normalizeEntry(entry) {
+  if (entry.sourceBooks) return entry;
+  const hasSource = entry.sourceBookTitle && entry.sourceBookTitle !== 'Untracked';
+  return {
+    ...entry,
+    sourceBooks: hasSource
+      ? [
+          {
+            title: entry.sourceBookTitle,
+            author: entry.sourceBookAuthor,
+            isbn: entry.sourceBookId,
+            inheritedReadDate: entry.inheritedReadDate,
+          },
+        ]
+      : [],
+  };
+}
+
+/**
+ * Case-insensitive match — "Ephemeral" and "ephemeral" are the same word
+ * for this purpose, so logging it a second time (even from an entirely
+ * different book) finds the existing card instead of creating a
+ * duplicate.
+ */
+export function findDuplicateEntry(entries, word) {
+  const cleaned = word.trim().toLowerCase();
+  return entries.find((e) => e.word.trim().toLowerCase() === cleaned) || null;
+}
+
+/**
+ * Appends a new source book to an existing entry, used when a duplicate
+ * word is logged from a different book than the one(s) already linked.
+ * Skips appending if the exact same book is already linked (matching by
+ * title+author), and does nothing at all for an untracked ("Not from a
+ * tracked book") selection, since there's no book to add.
+ */
+export function addSourceBookToEntry(entry, sourceBook) {
+  const isTracked = sourceBook && sourceBook.id !== null;
+  if (!isTracked) return entry;
+
+  const newBook = {
+    title: sourceBook.title,
+    author: sourceBook.author,
+    isbn: sourceBook.isbn || sourceBook.title,
+    inheritedReadDate: inheritedReadDateForBook(sourceBook),
+  };
+
+  const alreadyLinked = entry.sourceBooks.some((b) => b.title === newBook.title && b.author === newBook.author);
+  if (alreadyLinked) return entry;
+
+  return { ...entry, sourceBooks: [...entry.sourceBooks, newBook] };
 }
 
 export function exportVocabularyToJson(entries) {
@@ -103,18 +173,14 @@ export function exportVocabularyToJson(entries) {
 }
 
 export function exportVocabularyToCsv(entries) {
-  const headers = [
-    'word',
-    'partOfSpeech',
-    'phonetic',
-    'definition',
-    'sourceBookTitle',
-    'sourceBookAuthor',
-    'dateLearned',
-    'inheritedReadDate',
-  ];
+  const headers = ['word', 'partOfSpeech', 'phonetic', 'definition', 'sourceBooks', 'dateLearned'];
   const escape = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
-  const rows = entries.map((e) => headers.map((h) => escape(e[h])).join(','));
+  const rows = entries.map((e) => {
+    const sourceBooksStr = e.sourceBooks?.length ? e.sourceBooks.map((b) => b.title).join('; ') : 'Untracked';
+    return [e.word, e.partOfSpeech, e.phonetic, e.definition, sourceBooksStr, e.dateLearned]
+      .map(escape)
+      .join(',');
+  });
   return [headers.join(','), ...rows].join('\n');
 }
 

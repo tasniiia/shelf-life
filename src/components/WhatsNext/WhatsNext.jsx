@@ -11,17 +11,9 @@ import { computeReadingVelocity } from '../../lib/metrics';
 
 const TBR_SAMPLE_SIZE = 18;
 
-const TIME_FILTERS = [
-  { id: 'none', label: 'Any length' },
-  { id: 'flightTomorrow', label: 'Flight tomorrow (<250pg)' },
-  { id: 'longWeekend', label: 'Long weekend (450pg+)' },
-  { id: 'quickWin', label: 'Quick win (shortest first)' },
-];
-
 export default function WhatsNext({ library, onNavigate }) {
   const [finishedIdx, setFinishedIdx] = useState('');
   const [direction, setDirection] = useState('similar');
-  const [timeFilter, setTimeFilter] = useState('none');
   const [matches, setMatches] = useState(null);
   const [isRefining, setIsRefining] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,26 +48,14 @@ export default function WhatsNext({ library, onNavigate }) {
     // started before sampling, so a "smart" match never suggests, say, a
     // Hunger Games prequel to someone who hasn't read The Hunger Games.
     const eligibleToRead = filterSensibleCandidates(library.toRead, library.read);
-    let candidatePool = eligibleToRead.length ? eligibleToRead : library.toRead;
-
-    // Time-to-read quick filters, applied before sampling/scoring.
-    if (timeFilter === 'longWeekend') candidatePool = candidatePool.filter((b) => b.pages > 450);
-    else if (timeFilter === 'flightTomorrow') candidatePool = candidatePool.filter((b) => b.pages < 250);
+    const candidatePool = eligibleToRead.length ? eligibleToRead : library.toRead;
 
     if (!candidatePool.length) {
-      setError("No books on your to-read shelf match that length filter — try a different one.");
+      setError("Your to-read shelf doesn't have any eligible books yet.");
       return;
     }
 
     const candidates = pickRandomSample(candidatePool, TBR_SAMPLE_SIZE);
-
-    function finalizeMatches(list) {
-      // "Quick win" overrides relevance ranking entirely — shortest book
-      // wins, regardless of how well it otherwise matches.
-      return timeFilter === 'quickWin'
-        ? [...list].sort((a, b) => (a.pages ?? Infinity) - (b.pages ?? Infinity))
-        : list;
-    }
 
     setIsLoading(true);
     setIsRefining(true);
@@ -90,12 +70,12 @@ export default function WhatsNext({ library, onNavigate }) {
         readingVelocity,
         onProgress: (done, total) => setLoadingNote(`Looked up ${done} of ${total} books…`),
         onPartialUpdate: (partialMatches, isComplete) => {
-          setMatches(finalizeMatches(partialMatches));
+          setMatches(partialMatches);
           setIsLoading(false); // show results as soon as the first ones arrive
           setIsRefining(!isComplete);
         },
       });
-      setMatches(finalizeMatches(result));
+      setMatches(result);
     } catch (e) {
       setError(e.message || 'Something went wrong finding your match.');
     } finally {
@@ -134,17 +114,6 @@ export default function WhatsNext({ library, onNavigate }) {
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1.5">How much time do you have?</label>
-          <div className="flex flex-wrap gap-2">
-            {TIME_FILTERS.map((f) => (
-              <ToggleButton key={f.id} active={timeFilter === f.id} onClick={() => setTimeFilter(f.id)}>
-                {f.label}
-              </ToggleButton>
-            ))}
-          </div>
-        </div>
-
         <Button onClick={handleMatch} disabled={isLoading} className="w-full" size="lg">
           {isLoading ? (
             <>
@@ -168,11 +137,7 @@ export default function WhatsNext({ library, onNavigate }) {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <p className="ledger-label">
-              {timeFilter === 'quickWin'
-                ? 'Shortest first'
-                : direction === 'similar'
-                ? 'Closest matches'
-                : 'Polar opposites'}
+              {direction === 'similar' ? 'Closest matches' : 'Polar opposites'}
             </p>
             {isRefining && (
               <span className="flex items-center gap-1 text-xs text-ink/40">

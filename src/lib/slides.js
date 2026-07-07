@@ -277,6 +277,19 @@ export function buildSlides({ metrics, library, year = 'all' }) {
 
   if (metrics.diet) {
     const { pct } = metrics.diet;
+    const dominant =
+      pct.snacks >= pct.meals && pct.snacks >= pct.foodComas
+        ? 'snacks'
+        : pct.meals >= pct.foodComas
+        ? 'meals'
+        : 'foodComas';
+    const dietComment = {
+      snacks:
+        "You're a grazer, not a glutton — quick bites are your comfort zone, and there's no shame in a light literary snack.",
+      meals: "A balanced plate. Most of your reading sits in that satisfying, three-course kind of length.",
+      foodComas:
+        "You don't really do small portions. Once you commit to a book, you commit to the whole feast.",
+    }[dominant];
     slides.push({
       id: 'diet',
       locked: true, // ShelfLife Pro bonus card
@@ -288,7 +301,7 @@ export function buildSlides({ metrics, library, year = 'all' }) {
         { label: 'Meals (250–450pg)', pct: pct.meals },
         { label: 'Food comas (450pg+)', pct: pct.foodComas },
       ],
-      body: `${pct.snacks}% snacks, ${pct.meals}% meals, ${pct.foodComas}% food comas.`,
+      body: dietComment,
     });
   }
 

@@ -4,10 +4,13 @@ import Button from '../ui/Button';
 import BookAutocomplete from './BookAutocomplete';
 import VocabEntryCard from './VocabEntryCard';
 import FlashcardMode from './FlashcardMode';
-import { addVocabEntry, getAllVocabEntries, deleteVocabEntry } from '../../lib/vocabularyDb';
+import { addVocabEntry, updateVocabEntry, getAllVocabEntries, deleteVocabEntry } from '../../lib/vocabularyDb';
 import {
   fetchWordDefinition,
   buildVocabEntry,
+  normalizeEntry,
+  findDuplicateEntry,
+  addSourceBookToEntry,
   exportVocabularyToJson,
   exportVocabularyToCsv,
   downloadTextFile,
@@ -25,13 +28,14 @@ export default function VocabularyVault({ library }) {
   const [error, setError] = useState(null);
   const [sortBy, setSortBy] = useState('recent');
   const [missingDefinitionOnly, setMissingDefinitionOnly] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     getAllVocabEntries()
       .then((loaded) => {
         if (cancelled) return;
-        setEntries(loaded);
+        setEntries(loaded.map(normalizeEntry));
       })
       .catch((err) => {
         console.warn('[ShelfLife] Could not load vocabulary entries:', err.message || err);
@@ -52,9 +56,39 @@ export default function VocabularyVault({ library }) {
   async function handleAdd(e) {
     e.preventDefault();
     setError(null);
+    setSuccessMessage(null);
     const trimmed = word.trim();
     if (!trimmed) {
       setError('Type a word first.');
+      return;
+    }
+
+    const duplicate = findDuplicateEntry(entries, trimmed);
+    if (duplicate) {
+      // Same word already logged — even from a different book, this
+      // should extend the existing card rather than create a second one
+      // for the same word.
+      const alreadyHasThisBook = sourceBook?.id
+        ? duplicate.sourceBooks.some((b) => b.title === sourceBook.title && b.author === sourceBook.author)
+        : true; // untracked selections never add anything, so treat as "nothing new" either way
+      const merged = addSourceBookToEntry(duplicate, sourceBook);
+      setIsSaving(true);
+      try {
+        await updateVocabEntry(merged);
+        setEntries((prev) => prev.map((e) => (e.id === merged.id ? merged : e)));
+        setWord('');
+        setSourceBook(null);
+        setSuccessMessage(
+          alreadyHasThisBook
+            ? `"${duplicate.word}" is already in your vault.`
+            : `Added ${sourceBook.title} to your existing "${duplicate.word}" card.`
+        );
+      } catch (err) {
+        setError('Could not update that word — try again.');
+        console.warn('[ShelfLife] Failed to merge vocabulary entry:', err.message || err);
+      } finally {
+        setIsSaving(false);
+      }
       return;
     }
 
@@ -124,6 +158,7 @@ export default function VocabularyVault({ library }) {
             {error}
           </p>
         )}
+        {successMessage && <p className="text-sm text-ledger">{successMessage}</p>}
 
         <Button type="submit" disabled={isSaving} className="w-full">
           {isSaving ? (

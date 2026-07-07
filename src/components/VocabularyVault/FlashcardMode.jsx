@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { X, ChevronLeft, ChevronRight, Shuffle, RotateCw } from 'lucide-react';
 import Button from '../ui/Button';
+
+const SWIPE_THRESHOLD = 50; // pixels — below this, treat it as a tap, not a swipe
 
 // A fresh shuffle each time flashcard mode opens, not re-shuffled on every
 // render — otherwise the card order would scramble mid-review whenever
@@ -22,6 +24,13 @@ export default function FlashcardMode({ entries, onClose }) {
   const [deck, setDeck] = useState(() => shuffled(reviewable));
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
+
+  // Touch-swipe navigation. A swipe also fires a click event on release in
+  // most mobile browsers, which would otherwise also toggle the flip at
+  // the same time — wasSwipe suppresses exactly that one click, and only
+  // that one, rather than needing to fight the browser's event order.
+  const touchStartX = useRef(null);
+  const wasSwipe = useRef(false);
 
   if (reviewable.length === 0) {
     return (
@@ -56,6 +65,30 @@ export default function FlashcardMode({ entries, onClose }) {
     setFlipped(false);
   }
 
+  function handleTouchStart(e) {
+    touchStartX.current = e.touches[0].clientX;
+    wasSwipe.current = false;
+  }
+
+  function handleTouchEnd(e) {
+    if (touchStartX.current == null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(deltaX) > SWIPE_THRESHOLD) {
+      wasSwipe.current = true;
+      if (deltaX < 0) goNext();
+      else goPrev();
+    }
+    touchStartX.current = null;
+  }
+
+  function handleCardClick() {
+    if (wasSwipe.current) {
+      wasSwipe.current = false; // consume it — this click was really the tail end of a swipe
+      return;
+    }
+    setFlipped((f) => !f);
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-ink/95 flex flex-col items-center justify-center p-4 sm:p-8">
       <button onClick={onClose} className="absolute top-6 right-4 sm:right-8 text-paper/70 hover:text-paper" aria-label="Close">
@@ -67,7 +100,9 @@ export default function FlashcardMode({ entries, onClose }) {
       </p>
 
       <button
-        onClick={() => setFlipped((f) => !f)}
+        onClick={handleCardClick}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         className="w-full max-w-sm aspect-[3/4] catalog-card p-8 flex flex-col items-center justify-center text-center"
       >
         {!flipped ? (
@@ -82,8 +117,10 @@ export default function FlashcardMode({ entries, onClose }) {
           <>
             {card.partOfSpeech && <p className="ledger-label mb-2">{card.partOfSpeech}</p>}
             <p className="text-ink/80 leading-relaxed">{card.definition}</p>
-            {card.sourceBookTitle && card.sourceBookTitle !== 'Untracked' && (
-              <p className="text-xs text-ink/40 mt-4">from {card.sourceBookTitle}</p>
+            {card.sourceBooks?.length > 0 && (
+              <p className="text-xs text-ink/40 mt-4">
+                from {card.sourceBooks.map((b) => b.title).join(', ')}
+              </p>
             )}
           </>
         )}

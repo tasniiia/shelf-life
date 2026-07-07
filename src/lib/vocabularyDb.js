@@ -50,6 +50,19 @@ export async function addVocabEntry(entry) {
   });
 }
 
+// put (not add) — used when appending a source book to an entry that
+// already exists (a duplicate word logged from a different book), where
+// the intent is "overwrite this exact record," not "insert a new one."
+export async function updateVocabEntry(entry) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(entry);
+    tx.oncomplete = () => resolve(entry);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 export async function getAllVocabEntries() {
   const db = await openDb();
   return new Promise((resolve, reject) => {

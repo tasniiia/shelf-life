@@ -27,10 +27,14 @@ export default function VocabEntryCard({ entry, onDelete }) {
 
       <div className="hairline pt-3 flex items-center justify-between text-xs text-ink/50">
         <span className="truncate pr-2">
-          {entry.sourceBookTitle === 'Untracked' ? 'Not from a tracked book' : entry.sourceBookTitle}
+          {entry.sourceBooks?.length
+            ? entry.sourceBooks.length === 1
+              ? entry.sourceBooks[0].title
+              : `${entry.sourceBooks[0].title} +${entry.sourceBooks.length - 1} more`
+            : 'Not from a tracked book'}
         </span>
         <span className="font-mono shrink-0">
-          {new Date(entry.inheritedReadDate || entry.dateLearned).toLocaleDateString(undefined, {
+          {new Date(entry.sourceBooks?.[0]?.inheritedReadDate || entry.dateLearned).toLocaleDateString(undefined, {
             month: 'short',
             day: 'numeric',
             year: 'numeric',

@@ -236,6 +236,7 @@ export default function ShelfAwareness({ library }) {
                 total={slides.length}
                 isProUnlocked={proUnlocked}
                 onRequestUnlock={handleRequestUnlock}
+                onOpenSummary={() => setRecapOpen(true)}
               />
             </motion.div>
           </AnimatePresence>

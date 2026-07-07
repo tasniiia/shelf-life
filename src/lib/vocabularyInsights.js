@@ -52,11 +52,15 @@ export function computeScrabblePower(entries, yearScope) {
 const MIN_WORDS_FOR_ERA = 3;
 
 /**
- * Cross-references each entry's stored sourceBookTitle/sourceBookAuthor
- * against the CURRENT library to find that book's Original Publication
- * Year — deliberately not stored on the entry itself at save time, so this
+ * Cross-references an entry's first linked source book against the
+ * CURRENT library to find that book's Original Publication Year —
+ * deliberately not stored on the entry itself at save time, so this
  * works retroactively for every existing entry rather than only ones
  * saved after this feature shipped, and doesn't need a schema migration.
+ * Uses the first linked book specifically when a word has more than one
+ * (from being logged again for a different book) — a reasonable
+ * simplification rather than trying to average or otherwise combine
+ * multiple books' eras into one word's contribution.
  *
  * Real limitation worth being upfront about: this only works for entries
  * whose source book is still findable in your current library. Untracked
@@ -66,10 +70,10 @@ const MIN_WORDS_FOR_ERA = 3;
  * from this calculation rather than guessed at.
  */
 function findPublicationYear(entry, library) {
-  if (!entry.sourceBookTitle || entry.sourceBookTitle === 'Untracked') return null;
+  const firstBook = entry.sourceBooks?.[0];
+  if (!firstBook) return null;
   const match = (library.all || []).find(
-    (b) =>
-      b.title === entry.sourceBookTitle && (!entry.sourceBookAuthor || b.author === entry.sourceBookAuthor)
+    (b) => b.title === firstBook.title && (!firstBook.author || b.author === firstBook.author)
   );
   return match?.originalPublicationYear || null;
 }
@@ -109,7 +113,7 @@ export function computeLinguisticEra(entries, library, yearScope) {
     dominantCount,
     totalWithYear: withYears.length,
     modernCount,
-    persona: `${dominantEra} Scholar`,
+    persona: `${dominantEra} Reader`,
   };
 }
 
@@ -145,12 +149,12 @@ export function buildVocabInsightSlides({ scrabblePower, linguisticEra, scopeLab
       id: 'linguisticEra',
       kind: 'stat',
       locked: true,
-      eyebrow: 'Your linguistic era',
+      eyebrow: 'Your reading era',
       headline: persona,
       stat: `${pct}%`,
-      statLabel: `of ${totalWithYear} traceable words came from the ${eraPhrase}`,
-      body: `${dominantCount} of ${totalWithYear} words you can trace to a specific book came from the ${eraPhrase}.${
-        modernCount ? ` Only ${modernCount} came from the modern era.` : ''
+      statLabel: `of ${totalWithYear} traceable words came from books published in the ${eraPhrase}`,
+      body: `Every word in your vault is tied to the book you learned it from — this isn't about the words' own age. ${dominantCount} of ${totalWithYear} traceable words came from books published in the ${eraPhrase}.${
+        modernCount ? ` Only ${modernCount} came from a book published in the modern era.` : ''
       }`,
     });
   }

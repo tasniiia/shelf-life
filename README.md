@@ -23,7 +23,8 @@ Three features:
    - **Manual progress tracking** closes that "time remaining" gap
      directly: a slider (backed by a page-number readout, since that's
      what people actually know, rather than an abstract percentage) lets
-     you note how far into a book you are. Once set, the estimate upgrades
+     you note how far into a book you are, with a little 📖 riding along
+     the slider position. Once set, the estimate upgrades
      from "~3-day read at your pace" to genuine "~1 day left." Stored in
      its own small IndexedDB store, separate from the library itself, so
      it survives re-uploading a fresh CSV mid-book the same way
@@ -45,10 +46,7 @@ Three features:
    Library and Google Books; results stream in and re-rank live as each
    book resolves, rather than showing a blank wait for the whole batch.
 
-   **Time-to-read filters** narrow the candidate pool before matching:
-   *Flight tomorrow* (<250pg), *Long weekend* (450pg+), or *Quick win*
-   (bypasses relevance ranking entirely and just returns your shortest
-   to-read books). Every match also shows an **"at your pace" reading-time
+   Every match also shows an **"at your pace" reading-time
    estimate**, based on your median pages-per-day velocity calculated from
    gaps between consecutive `Date Read` entries on your read shelf.
 
@@ -110,7 +108,9 @@ Three features:
    your own rating distribution, whether long books actually earn higher
    ratings from you, page-count mix, series commitment, review-writing
    habits, your oldest unread book (title withheld until you flip the card
-   on desktop or tap it on mobile — both platforms match now), **backlog
+   — **desktop-only**; on mobile it's shown directly, since the reveal
+   interaction is specifically a desktop flip-card thing, not something to
+   force onto a swipe-through story just for the sake of parity), **backlog
    clear time** (how long your
    whole to-read shelf would take at your actual reading pace), your
    **backlog's average age** across every to-read book, as a persona (a
@@ -122,8 +122,11 @@ Three features:
    Time** or any year you've actually finished a book in for an **Annual
    Recap** scoped to just that year.
    - On mobile, it plays as a full-screen, tap-through story, opening on an
-     intro card and closing on a sign-off card — genuine narrative
-     bookends for a swipe-through format.
+     intro card and closing on a **"See Your Summary" card** — a tap
+     target that opens the same shareable summary as desktop's capstone
+     tile, rather than the dense summary card itself being spliced into
+     the swipe sequence (it would've been a jarring density shift next to
+     every other simple insight card in the story).
    - On desktop, every card is laid out on one page — click any card to
      flip it over and reveal the detail on the back. The intro/outro
      cards are deliberately **not** part of this grid (desktop-only
@@ -162,9 +165,11 @@ Three features:
      async, unlike the rest of this synchronously-built deck, so these
      arrive an instant after everything else — imperceptible in practice):
      **Scrabble Power** (a deliberately gamified point score across your
-     logged words, using standard Scrabble tile values) and **Your Linguistic
-     Era** (a Spotify-Wrapped-style persona based on the publication era of
-     the books your words came from — cross-referenced against your
+     logged words, using standard Scrabble tile values) and **Your Reading
+     Era** (renamed from "Your Linguistic Era" — the old name, and the
+     "-Century Scholar" persona, implied this was about the words'
+     own etymological age, when it's actually about the *publication year
+     of the book each word came from*. Cross-referenced against your
      current library at display time, not stored on the word itself, so it
      works retroactively for every existing entry). A third card, "Where
      Your Words Come From" (genre density), was tried and retired — it
@@ -181,6 +186,15 @@ Three features:
    fill in yourself. Fully free, no Pro gate. Export your whole vault (not
    just whatever's currently sorted/filtered — always everything) as
    JSON or CSV at any time.
+   - **Logging a word that's already in your vault** (case-insensitive —
+     "Ephemeral" and "ephemeral" count as the same word) doesn't create a
+     second card. If it's tagged to a different book than before, that
+     book gets added to the existing card's list of source books instead
+     — a word's card can end up linked to several books over time, not
+     just the one you first logged it from. Each entry stores an array of
+     source books rather than a single one for exactly this reason; any
+     entry saved before this existed gets normalized into that shape
+     automatically the first time it loads, no migration step needed.
    - **Sort** by recently added (default), alphabetical, or Scrabble
      value high-to-low (reuses the same tile-value scoring as the Scrabble
      Power Pro card). **Filter** to just words still missing a definition —
@@ -190,8 +204,8 @@ Three features:
    - **Flashcard Mode** shuffles your words (only ones with an actual
      definition — nothing to quiz yourself on for a blank one) into a
      one-at-a-time review: tap to reveal the definition, part of speech,
-     and source book, then step through with Previous/Next or reshuffle
-     entirely.
+     and source book(s), then step through with Previous/Next, a swipe
+     left/right on touch devices, or reshuffle entirely.
    - Storage is IndexedDB, not `localStorage` — better suited to a
      collection that can grow into hundreds of entries with real structure,
      and it's asynchronous rather than blocking. Implemented as a small

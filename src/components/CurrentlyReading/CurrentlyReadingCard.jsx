@@ -92,15 +92,24 @@ export default function CurrentlyReadingCard({ book, readingVelocity, peek, prog
           <div className="h-2 bg-line rounded-full overflow-hidden mb-1.5">
             <div className="h-full bg-stamp rounded-full transition-all" style={{ width: `${sliderValue}%` }} />
           </div>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={sliderValue}
-            onChange={(e) => handleSliderChange(Number(e.target.value))}
-            className="w-full accent-stamp"
-            aria-label={`Reading progress for ${book.title}`}
-          />
+          <div className="relative pt-4">
+            <span
+              className="absolute -top-1 text-base leading-none pointer-events-none transition-all"
+              style={{ left: `calc(${sliderValue}% - 9px)` }}
+              aria-hidden="true"
+            >
+              📖
+            </span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={sliderValue}
+              onChange={(e) => handleSliderChange(Number(e.target.value))}
+              className="w-full accent-stamp"
+              aria-label={`Reading progress for ${book.title}`}
+            />
+          </div>
         </div>
 
         {(remainingDays != null || wholeBookDays) && (

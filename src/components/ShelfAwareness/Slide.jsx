@@ -1,12 +1,11 @@
-import { forwardRef, useState } from 'react';
-import { BookOpen } from 'lucide-react';
+import { forwardRef } from 'react';
+import { Share2 } from 'lucide-react';
 import Stamp from '../ui/Stamp';
 import { Donut, Histogram, RankedBars } from '../ui/charts';
 import LockedTeaser, { LockBadge } from './LockedTeaser';
 
-const Slide = forwardRef(function Slide({ slide, index, total, isProUnlocked, onRequestUnlock }, ref) {
+const Slide = forwardRef(function Slide({ slide, index, total, isProUnlocked, onRequestUnlock, onOpenSummary }, ref) {
   const isLocked = slide.locked && !isProUnlocked;
-  const [bookRevealed, setBookRevealed] = useState(false);
 
   return (
     <div
@@ -43,6 +42,15 @@ const Slide = forwardRef(function Slide({ slide, index, total, isProUnlocked, on
                 ))}
               </div>
             )}
+            {slide.id === 'outro' && onOpenSummary && (
+              <button
+                onClick={onOpenSummary}
+                className="flex items-center justify-center gap-2 w-full catalog-card p-4 mt-2 border-2 border-dashed border-stamp/40 hover:border-stamp transition-colors"
+              >
+                <Share2 className="w-4 h-4 text-stamp" />
+                <span className="font-display text-sm font-semibold">See Your Summary</span>
+              </button>
+            )}
           </>
         )}
 
@@ -70,24 +78,11 @@ const Slide = forwardRef(function Slide({ slide, index, total, isProUnlocked, on
 
         {slide.kind === 'book' && (
           <>
-            {bookRevealed ? (
-              <>
-                <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight leading-tight mb-1">
-                  {slide.headline}
-                </h2>
-                {slide.author && <p className="text-ink/50 mb-4">{slide.author}</p>}
-                <p className="text-ink/70 leading-relaxed">{slide.body}</p>
-              </>
-            ) : (
-              <button
-                onClick={() => setBookRevealed(true)}
-                className="flex flex-col items-center text-center py-6 w-full"
-              >
-                <BookOpen className="w-10 h-10 text-ink/20 mb-4" />
-                <h2 className="font-display text-2xl font-semibold leading-snug mb-2">The Longest Wait</h2>
-                <p className="text-ink/50">Tap to find out which book.</p>
-              </button>
-            )}
+            <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight leading-tight mb-1">
+              {slide.headline}
+            </h2>
+            {slide.author && <p className="text-ink/50 mb-4">{slide.author}</p>}
+            <p className="text-ink/70 leading-relaxed">{slide.body}</p>
           </>
         )}
 
