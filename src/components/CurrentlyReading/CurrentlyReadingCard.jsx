@@ -89,26 +89,41 @@ export default function CurrentlyReadingCard({ book, readingVelocity, peek, prog
               {sliderValue}% done{pageEquivalent ? ` \u00b7 page ${pageEquivalent} of ${book.pages}` : ''}
             </span>
           </div>
-          <div className="h-2 bg-line rounded-full overflow-hidden mb-1.5">
-            <div className="h-full bg-stamp rounded-full transition-all" style={{ width: `${sliderValue}%` }} />
-          </div>
-          <div className="relative pt-4">
-            <span
-              className="absolute -top-1 text-base leading-none pointer-events-none transition-all"
-              style={{ left: `calc(${sliderValue}% - 9px)` }}
-              aria-hidden="true"
-            >
-              📖
-            </span>
+          <div className="relative h-6 flex items-center">
+            {/* Visual track + fill, sitting behind the (now invisible) native
+                input — this is what's actually seen; the range input itself
+                still handles all drag/keyboard interaction, its thumb just
+                has no visible fill/border of its own anymore. */}
+            <div className="absolute inset-x-0 h-2 bg-line rounded-full overflow-hidden pointer-events-none">
+              <div className="h-full bg-stamp/30 rounded-full transition-all" style={{ width: `${sliderValue}%` }} />
+            </div>
             <input
               type="range"
               min="0"
               max="100"
               value={sliderValue}
               onChange={(e) => handleSliderChange(Number(e.target.value))}
-              className="w-full accent-stamp"
+              className="relative w-full appearance-none bg-transparent cursor-pointer
+                [&::-webkit-slider-runnable-track]:bg-transparent
+                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
+                [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:shadow-none
+                [&::-webkit-slider-thumb]:cursor-pointer
+                [&::-moz-range-track]:bg-transparent
+                [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6
+                [&::-moz-range-thumb]:bg-transparent [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-none
+                [&::-moz-range-thumb]:cursor-pointer"
               aria-label={`Reading progress for ${book.title}`}
             />
+            {/* The emoji rides exactly where the (now invisible) native thumb
+                sits, using the same percentage math — this is the visible
+                "thumb" now. */}
+            <span
+              className="absolute text-xl leading-none pointer-events-none transition-all"
+              style={{ left: `calc(${sliderValue}% - 11px)` }}
+              aria-hidden="true"
+            >
+              📖
+            </span>
           </div>
         </div>
 
