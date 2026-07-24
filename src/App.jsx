@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Header from './components/Layout/Header';
 import CsvUpload from './components/Upload/CsvUpload';
 import WhatsNext from './components/WhatsNext/WhatsNext';
@@ -8,9 +8,13 @@ import { prefetchLibraryMetadata, clearMetadataCache } from './lib/bookMetadata'
 import { filterSensibleCandidates } from './lib/metadataMatcher';
 import { checkForCheckoutReturn } from './lib/monetization';
 import { saveLibraryToStorage, loadLibraryFromStorage, clearStoredLibrary } from './lib/libraryStorage';
+import { applyCompletedOverrides, reconcileOverrides } from './lib/libraryOverrides';
+import { bookProgressKey } from './lib/readingProgress';
+import { addOverride, getAllOverrides, deleteOverride } from './lib/completedOverridesDb';
 
 export default function App() {
-  const [library, setLibrary] = useState(() => loadLibraryFromStorage());
+  const [rawLibrary, setRawLibrary] = useState(() => loadLibraryFromStorage());
+  const [overrides, setOverrides] = useState([]);
   const [view, setView] = useState('vibe');
   const [prefetchProgress, setPrefetchProgress] = useState(null); // { done, total } | null
   const prefetchStarted = useRef(false);
@@ -19,10 +23,55 @@ export default function App() {
     checkForCheckoutReturn();
   }, []);
 
-  function handleLibraryParsed(parsedLibrary) {
-    setLibrary(parsedLibrary);
+  // Loaded once on mount — if the raw library was itself restored from
+  // localStorage above, this picks up whatever "marked finished" overrides
+  // were saved in a previous session too.
+  useEffect(() => {
+    getAllOverrides()
+      .then(setOverrides)
+      .catch((err) => console.warn('[ShelfLife] Could not load completed-book overrides:', err.message || err));
+  }, []);
+
+  // The effective library every tab actually sees: the raw CSV-derived one
+  // with every "marked finished" override applied on top. This is the
+  // app's first local "write" that can genuinely contradict the uploaded
+  // CSV rather than just supplementing it — see libraryOverrides.js for
+  // why that needs its own reconciliation step whenever a fresh CSV
+  // arrives, handled in handleLibraryParsed below.
+  const library = useMemo(
+    () => (rawLibrary ? applyCompletedOverrides(rawLibrary, overrides) : null),
+    [rawLibrary, overrides]
+  );
+
+  async function handleMarkFinished(book) {
+    const override = { bookKey: bookProgressKey(book), completedDate: new Date().toISOString() };
+    try {
+      await addOverride(override);
+      setOverrides((prev) => [...prev.filter((o) => o.bookKey !== override.bookKey), override]);
+    } catch (err) {
+      console.warn('[ShelfLife] Could not save "marked finished" override:', err.message || err);
+    }
+  }
+
+  async function handleLibraryParsed(parsedLibrary) {
+    setRawLibrary(parsedLibrary);
     if (!saveLibraryToStorage(parsedLibrary)) {
       console.warn('[ShelfLife] Library could not be saved — it will need to be re-uploaded after a refresh.');
+    }
+
+    // A fresh upload might mean Goodreads has genuinely caught up to a
+    // book you marked finished locally — if the new CSV itself now shows
+    // it as read, the override is redundant and should retire quietly
+    // rather than risk the book appearing twice or with two different
+    // finish dates once the real data catches up.
+    if (overrides.length) {
+      try {
+        const { stillNeeded, retired } = reconcileOverrides(parsedLibrary, overrides);
+        await Promise.all(retired.map((o) => deleteOverride(o.bookKey)));
+        setOverrides(stillNeeded);
+      } catch (err) {
+        console.warn('[ShelfLife] Could not reconcile completed-book overrides:', err.message || err);
+      }
     }
   }
 
@@ -62,7 +111,7 @@ export default function App() {
     }
     prefetchStarted.current = false;
     setPrefetchProgress(null);
-    setLibrary(null);
+    setRawLibrary(null);
     clearStoredLibrary();
   }
 
@@ -75,7 +124,9 @@ export default function App() {
       <main className="flex-1">
         {!library && <CsvUpload onLibraryParsed={handleLibraryParsed} />}
 
-        {library && view === 'vibe' && <WhatsNext library={library} onNavigate={setView} />}
+        {library && view === 'vibe' && (
+          <WhatsNext library={library} onNavigate={setView} onMarkFinished={handleMarkFinished} />
+        )}
 
         {library && view === 'awareness' && <ShelfAwareness library={library} />}
 

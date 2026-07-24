@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { BookOpen, ExternalLink, Clock } from 'lucide-react';
+import { BookOpen, ExternalLink, Clock, CheckCircle2 } from 'lucide-react';
 import { coverUrlForBook, getBookMetadata } from '../../lib/bookMetadata';
 import { daysOnShelfLabel } from '../../lib/currentlyReading';
 import { goodreadsUrl } from '../../lib/metadataMatcher';
 import { percentToPage, estimateDaysRemaining } from '../../lib/readingProgress';
 
-export default function CurrentlyReadingCard({ book, readingVelocity, peek, progress, onProgressChange }) {
+export default function CurrentlyReadingCard({ book, readingVelocity, peek, progress, onProgressChange, onMarkFinished }) {
   // Not every Goodreads entry has an ISBN — Kindle editions especially
   // often don't — so this needs the same graceful placeholder fallback
   // used everywhere else covers are shown in this app, not an assumption
@@ -136,14 +136,24 @@ export default function CurrentlyReadingCard({ book, readingVelocity, peek, prog
           </p>
         )}
 
-        <a
-          href={goodreadsUrl(book)}
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-1 text-xs font-medium text-stamp hover:underline w-fit"
-        >
-          Goodreads <ExternalLink className="w-3 h-3" />
-        </a>
+        <div className="flex items-center gap-3">
+          <a
+            href={goodreadsUrl(book)}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1 text-xs font-medium text-stamp hover:underline w-fit"
+          >
+            Goodreads <ExternalLink className="w-3 h-3" />
+          </a>
+          {onMarkFinished && (
+            <button
+              onClick={onMarkFinished}
+              className="flex items-center gap-1 text-xs font-medium text-ledger hover:underline w-fit"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" /> Mark as Finished
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

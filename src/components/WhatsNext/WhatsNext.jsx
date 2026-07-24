@@ -11,7 +11,7 @@ import { computeReadingVelocity } from '../../lib/metrics';
 
 const TBR_SAMPLE_SIZE = 18;
 
-export default function WhatsNext({ library, onNavigate }) {
+export default function WhatsNext({ library, onNavigate, onMarkFinished }) {
   const [finishedIdx, setFinishedIdx] = useState('');
   const [direction, setDirection] = useState('similar');
   const [matches, setMatches] = useState(null);
@@ -86,7 +86,7 @@ export default function WhatsNext({ library, onNavigate }) {
 
   return (
     <>
-      <CurrentlyReadingHero library={library} />
+      <CurrentlyReadingHero library={library} onMarkFinished={onMarkFinished} />
       <ReadingGoals library={library} />
       <div className="max-w-2xl mx-auto px-4 py-10 sm:py-14">
         <p className="ledger-label mb-2">What's next?</p>

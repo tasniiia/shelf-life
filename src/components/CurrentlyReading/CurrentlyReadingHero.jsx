@@ -5,7 +5,7 @@ import { computeReadingVelocity } from '../../lib/metrics';
 import { bookProgressKey } from '../../lib/readingProgress';
 import { getAllProgress, setProgress } from '../../lib/progressDb';
 
-export default function CurrentlyReadingHero({ library }) {
+export default function CurrentlyReadingHero({ library, onMarkFinished }) {
   const books = useMemo(
     () => sortByDateAddedDescending(library.currentlyReading || []),
     [library.currentlyReading]
@@ -42,6 +42,17 @@ export default function CurrentlyReadingHero({ library }) {
     });
   }
 
+  function handleMarkFinished(book) {
+    if (
+      !window.confirm(
+        `Mark "${book.title}" as finished? It'll move to your read shelf here in ShelfLife — this doesn't update Goodreads itself.`
+      )
+    ) {
+      return;
+    }
+    onMarkFinished(book);
+  }
+
   if (books.length === 0) return null;
 
   const hasMultiple = books.length > 1;
@@ -63,6 +74,7 @@ export default function CurrentlyReadingHero({ library }) {
               peek={hasMultiple}
               progress={progressByKey[bookKey]}
               onProgressChange={(pct) => handleProgressChange(book, pct)}
+              onMarkFinished={() => handleMarkFinished(book)}
             />
           );
         })}

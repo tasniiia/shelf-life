@@ -29,6 +29,26 @@ Three features:
      its own small IndexedDB store, separate from the library itself, so
      it survives re-uploading a fresh CSV mid-book the same way
      Vocabulary Vault and Goals do.
+   - **"Mark as Finished"** moves a book from currently-reading to read
+     right in ShelfLife, without needing to re-export an updated CSV from
+     Goodreads first — genuinely useful since real progress tracking now
+     exists for currently-reading books, but this is the app's first local
+     "write" that can actually *contradict* the uploaded CSV rather than
+     just supplement it, so it needed real care:
+     - The effective library (what every tab actually sees) is the raw
+       CSV-derived one with these overrides applied on top — the raw data
+       itself is never mutated, only recomputed through on every render.
+     - If you eventually do re-export from Goodreads and it now shows the
+       book as read, the override reconciles itself automatically and
+       retires — otherwise the book could end up double-counted or with
+       two conflicting finish dates once the real data catches up. An
+       override for a book that's simply *missing* from a fresh CSV
+       (rather than shown as read) is treated as still needed — absence
+       isn't evidence of completion, just that the export doesn't
+       mention it.
+     - Confirms before applying, since there's no undo button for this yet
+       and it doesn't touch Goodreads itself — worth being upfront about
+       in the confirmation copy, not just doing it silently.
    - At the bottom of this page, two navigation cards link out to Shelf
      Awareness and Vocabulary Vault — since this page is now the app's
      landing page, these exist so exploring the other two sections doesn't
@@ -380,6 +400,10 @@ src/
     vocabularyInsights.js # Scrabble/Era/Genre Pro cards derived from Vault data
     goals.js             # Reading Goals period math, progress, streaks
     goalsDb.js            # Hand-rolled IndexedDB wrapper for goals
+    readingProgress.js    # Manual progress %, page math, time-left estimate
+    progressDb.js          # Hand-rolled IndexedDB wrapper for progress
+    libraryOverrides.js   # Merge/reconcile "marked finished" overrides
+    completedOverridesDb.js # Hand-rolled IndexedDB wrapper for overrides
   components/
     Layout/          # Header + nav
     Upload/          # CSV drop zone
